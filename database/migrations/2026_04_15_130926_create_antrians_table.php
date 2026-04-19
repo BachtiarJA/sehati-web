@@ -16,7 +16,7 @@ return new class extends Migration
 
             // Perhatikan constrained() di bawah ini sudah disesuaikan dengan nama tabel Anda
             $table->foreignId('pasien_id')->constrained('pasiens')->onDelete('cascade');
-            $table->foreignId('dokter_id')->constrained('dokter')->onDelete('cascade'); // <-- merujuk ke tabel 'dokter'
+            $table->foreignId('dokter_id')->constrained('dokter')->onDelete('cascade'); 
 
             $table->date('tgl_kunjungan');
             $table->integer('no_antrian');

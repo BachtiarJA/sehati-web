@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +45,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // Relasi One-to-One ke profil Dokter
+    public function dokter()
+    {
+        return $this->hasOne(Dokter::class, 'user_id');
+    }
+
+    // Relasi One-to-One ke profil Pasien
+    public function pasien()
+    {
+        return $this->hasOne(Pasien::class, 'user_id');
     }
 }
