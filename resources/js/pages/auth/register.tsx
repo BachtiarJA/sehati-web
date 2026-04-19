@@ -14,6 +14,10 @@ interface RegisterForm {
     email: string;
     password: string;
     password_confirmation: string;
+    // Tambahan atribut dokter
+    keahlian: string;
+    no_str: string;
+    no_telp: string;
 }
 
 export default function Register() {
@@ -22,6 +26,9 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
+        keahlian: '',
+        no_str: '',
+        no_telp: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -32,41 +39,96 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
-            <Head title="Register" />
+        <AuthLayout title="Registrasi Dokter" description="Masukkan detail Anda untuk membuat akun dokter">
+            <Head title="Register Dokter" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="name">Nama Lengkap (beserta Gelar)</Label>
                         <Input
                             id="name"
                             type="text"
                             required
                             autoFocus
                             tabIndex={1}
-                            autoComplete="name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             disabled={processing}
-                            placeholder="Full name"
+                            placeholder="dr. Budi Santoso, Sp.A"
                         />
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.name} />
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
+                        <Label htmlFor="email">Alamat Email</Label>
                         <Input
                             id="email"
                             type="email"
                             required
                             tabIndex={2}
-                            autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             disabled={processing}
-                            placeholder="email@example.com"
+                            placeholder="email@klinik.com"
                         />
                         <InputError message={errors.email} />
+                    </div>
+
+                    {/* --- INPUT BARU: KEAHLIAN --- */}
+                    <div className="grid gap-2">
+                        <Label htmlFor="keahlian">Spesialisasi / Layanan Klinik</Label>
+
+                        <select
+                            id="keahlian"
+                            required
+                            tabIndex={3}
+                            value={data.keahlian}
+                            onChange={(e) => setData('keahlian', e.target.value)}
+                            disabled={processing}
+                            // Styling ini menyesuaikan tampilan <Input> bawaan shadcn
+                            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {/* Pilihan pertama (kosong) sebagai placeholder wajib isi */}
+                            <option value="" disabled>
+                                Pilih layanan...
+                            </option>
+                            <option value="Umum">Dokter Umum</option>
+                            <option value="Khitan">Layanan Khitan</option>
+                        </select>
+
+                        <InputError message={errors.keahlian} />
+                    </div>
+
+                    {/* --- INPUT BARU: NO STR --- */}
+                    <div className="grid gap-2">
+                        <Label htmlFor="no_str">Nomor STR (Surat Tanda Registrasi)</Label>
+                        <Input
+                            id="no_str"
+                            type="text"
+                            required
+                            tabIndex={4}
+                            value={data.no_str}
+                            onChange={(e) => setData('no_str', e.target.value)}
+                            disabled={processing}
+                            placeholder="Masukkan No. STR aktif"
+                        />
+                        <InputError message={errors.no_str} />
+                    </div>
+
+                    {/* --- INPUT BARU: NO TELP --- */}
+                    <div className="grid gap-2">
+                        <Label htmlFor="no_telp">Nomor Telepon</Label>
+                        <Input
+                            id="no_telp"
+                            type="text"
+                            required
+                            tabIndex={5}
+                            value={data.no_telp}
+                            onChange={(e) => setData('no_telp', e.target.value)}
+                            disabled={processing}
+                            placeholder="08123456789"
+                        />
+                        <InputError message={errors.no_telp} />
                     </div>
 
                     <div className="grid gap-2">
@@ -75,8 +137,7 @@ export default function Register() {
                             id="password"
                             type="password"
                             required
-                            tabIndex={3}
-                            autoComplete="new-password"
+                            tabIndex={6}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             disabled={processing}
@@ -86,13 +147,12 @@ export default function Register() {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
+                        <Label htmlFor="password_confirmation">Konfirmasi Password</Label>
                         <Input
                             id="password_confirmation"
                             type="password"
                             required
-                            tabIndex={4}
-                            autoComplete="new-password"
+                            tabIndex={7}
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             disabled={processing}
@@ -101,16 +161,16 @@ export default function Register() {
                         <InputError message={errors.password_confirmation} />
                     </div>
 
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
+                    <Button type="submit" className="mt-2 w-full" tabIndex={8} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Create account
+                        Daftar sebagai Dokter
                     </Button>
                 </div>
 
                 <div className="text-muted-foreground text-center text-sm">
-                    Already have an account?{' '}
-                    <TextLink href={route('login')} tabIndex={6}>
-                        Log in
+                    Sudah punya akun?{' '}
+                    <TextLink href={route('login')} tabIndex={9}>
+                        Login di sini
                     </TextLink>
                 </div>
             </form>
