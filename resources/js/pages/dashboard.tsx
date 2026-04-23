@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { type BreadcrumbItem } from '@/types';
+import { useState } from 'react';
 import {
     Users,
     Activity,
@@ -29,7 +30,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const chartData = [
+const weeklyData = [
     { name: 'Sen', pasien: 45, online: 20 },
     { name: 'Sel', pasien: 52, online: 25 },
     { name: 'Rab', pasien: 48, online: 22 },
@@ -39,7 +40,17 @@ const chartData = [
     { name: 'Min', pasien: 42, online: 15 },
 ];
 
+const monthlyData = [
+    { name: 'Minggu 1', pasien: 350, online: 150 },
+    { name: 'Minggu 2', pasien: 420, online: 210 },
+    { name: 'Minggu 3', pasien: 380, online: 180 },
+    { name: 'Minggu 4', pasien: 450, online: 240 },
+];
+
 export default function Dashboard() {
+    const [chartView, setChartView] = useState<'mingguan' | 'bulanan'>('mingguan');
+    const chartData = chartView === 'mingguan' ? weeklyData : monthlyData;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard Utama" />
@@ -63,7 +74,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Card 1 */}
                     <div className="group bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                         <div className="flex justify-between items-start">
@@ -85,7 +96,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Card 2 */}
-                    <div className="group bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <Link href="/antrian" className="block group bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Antrian Aktif</p>
@@ -102,45 +113,7 @@ export default function Dashboard() {
                             </span>
                             <span className="text-xs text-slate-400">per jam ini</span>
                         </div>
-                    </div>
-
-                    {/* Card 3 */}
-                    <div className="group bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Dokter Siaga</p>
-                                <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1 group-hover:text-blue-600 transition-colors">8</h3>
-                            </div>
-                            <div className="p-3.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                                <Stethoscope className="w-6 h-6" />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-full">
-                                Semua poli terisi
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Card 4 */}
-                    <div className="group relative overflow-hidden bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border border-red-100 dark:border-red-900/30 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <div className="absolute top-0 right-0 p-32 bg-red-400/10 dark:bg-red-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000"></div>
-                        <div className="relative flex justify-between items-start">
-                            <div>
-                                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Status Alarm</p>
-                                <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-1 group-hover:text-red-600 transition-colors">2</h3>
-                            </div>
-                            <div className="p-3.5 bg-red-50 dark:bg-red-500/10 text-red-600 rounded-2xl group-hover:scale-110 transition-transform duration-300 relative">
-                                <span className="absolute -inset-1 rounded-2xl bg-red-500/20 animate-ping"></span>
-                                <AlertTriangle className="w-6 h-6 relative" />
-                            </div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2 relative">
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400 px-2.5 py-1 rounded-full border border-red-100 dark:border-red-500/20">
-                                Perlu Perhatian
-                            </span>
-                        </div>
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Main Content Grid */}
@@ -150,10 +123,23 @@ export default function Dashboard() {
                     <div className="lg:col-span-2 bg-white dark:bg-slate-800/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-slate-700/50 shadow-sm">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                             <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Statistik Kunjungan</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">7 Hari Terakhir</p>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Riwayat Kunjungan</h3>
+                                <div className="flex items-center gap-2 mt-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg w-fit">
+                                    <button
+                                        onClick={() => setChartView('mingguan')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'mingguan' ? 'bg-white dark:bg-slate-600 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                                    >
+                                        Mingguan
+                                    </button>
+                                    <button
+                                        onClick={() => setChartView('bulanan')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartView === 'bulanan' ? 'bg-white dark:bg-slate-600 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                                    >
+                                        Bulanan
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                 <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                                     <div className="w-3 h-3 rounded-full bg-teal-500"></div> Pasien Langsung
                                 </div>
