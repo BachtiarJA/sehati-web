@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -10,15 +12,11 @@ Route::get('/', function () {
 Route::middleware(['auth', 'role:dokter'])->group(function () {
 
 
-    Route::get('/dashboard', function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/antrian', [AntrianController::class, 'index'])->name('antrian');
 
-    Route::get('/antrian', function () {
-        return Inertia::render('antrian');
-    })->name('antrian');
-
+    Route::patch('/antrian/{id}/periksa', [AntrianController::class, 'periksa'])->name('antrian.periksa');
 
     Route::get('/diagnosis', function () {
         return Inertia::render('diagnosis');
