@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PemeriksaanController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,9 +19,11 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
 
     Route::patch('/antrian/{id}/periksa', [AntrianController::class, 'periksa'])->name('antrian.periksa');
 
-    Route::get('/diagnosis', function () {
-        return Inertia::render('diagnosis');
-    })->name('diagnosis');
+    Route::get('/diagnosis', [PemeriksaanController::class, 'index'])->name('diagnosis');
+    Route::post('/diagnosis', [PemeriksaanController::class, 'store'])->name('diagnosis.store');
+    Route::put('/diagnosis/{id}', [PemeriksaanController::class, 'update'])->name('diagnosis.update');
+    Route::delete('/diagnosis/{id}', [PemeriksaanController::class, 'destroy'])->name('diagnosis.destroy');
+
 
 
     Route::get('/resep-obat', function () {

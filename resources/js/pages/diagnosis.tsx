@@ -1,29 +1,42 @@
-import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { Plus, Search, Edit2, Trash2, Filter, Download, X, Save, FileText } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Calendar, Download, Edit2, Plus, Save, Search, Trash2, User, X } from 'lucide-react';
+import { useState } from 'react';
+import * as XLSX from 'xlsx';
 
-interface Pemeriksaan {
-    id_pemeriksaan: string;
-    id_antrian: string;
+interface PemeriksaanData {
+    id: number;
+    nama_pasien: string;
     keluhan: string;
     diagnosa: string;
     tindakan: string;
+    tanggal_raw: string;
+    tanggal_format: string;
 }
 
-const INITIAL_DATA: Pemeriksaan[] = [
-    { id_pemeriksaan: 'PMR-001', id_antrian: 'A01', keluhan: 'Pusing, mual sejak 3 hari lalu', diagnosa: 'Vertigo & Dispepsia', tindakan: 'Pemberian obat anti-mual & edukasi diet' },
-    { id_pemeriksaan: 'PMR-002', id_antrian: 'B02', keluhan: 'Sakit gigi bagian bawah kiri', diagnosa: 'Karies dentis', tindakan: 'Tambal sementara' },
-    { id_pemeriksaan: 'PMR-003', id_antrian: 'C03', keluhan: 'Demam tinggi, ruam merah', diagnosa: 'Suspek DBD', tindakan: 'Rujuk untuk cek darah lengkap' },
-];
+interface AntrianAktif {
+    id: number;
+    nama: string;
+}
 
-export default function Pemeriksaan() {
+interface Props {
+    pemeriksaans: PemeriksaanData[];
+    antrianAktif: AntrianAktif[];
+}
+
+export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [pemeriksaanData, setPemeriksaanData] = useState<Pemeriksaan[]>(INITIAL_DATA);
+    // 1. Tambahkan state untuk filter waktu
+    const [filterWaktu, setFilterWaktu] = useState<'semua' | 'harian' | 'mingguan' | 'bulanan' | 'tanggal_tertentu'>('semua');
+    // 2. Tambahkan state untuk menampung tanggal spesifik yang dipilih
+    const [tanggalSpesifik, setTanggalSpesifik] = useState('');
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-    const [formData, setFormData] = useState<Pemeriksaan>({
-        id_pemeriksaan: '',
-        id_antrian: '',
+    const [editId, setEditId] = useState<number | null>(null);
+
+    const { data, setData, post, put, reset, processing } = useForm({
+        antrian_id: '',
         keluhan: '',
         diagnosa: '',
         tindakan: '',
@@ -31,87 +44,173 @@ export default function Pemeriksaan() {
 
     const openAddModal = () => {
         setModalMode('add');
-        setFormData({
-            id_pemeriksaan: '',
-            id_antrian: '',
-            keluhan: '',
-            diagnosa: '',
-            tindakan: '',
-        });
+        reset();
         setIsModalOpen(true);
     };
 
-    const openEditModal = (pemeriksaan: Pemeriksaan) => {
+    const openEditModal = (item: PemeriksaanData) => {
         setModalMode('edit');
-        setFormData(pemeriksaan);
+        setEditId(item.id);
+        setData({
+            antrian_id: '',
+            keluhan: item.keluhan,
+            diagnosa: item.diagnosa,
+            tindakan: item.tindakan,
+        });
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        reset();
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (modalMode === 'add') {
-            setPemeriksaanData([...pemeriksaanData, formData]);
+            post('/diagnosis', { onSuccess: () => handleCloseModal() });
         } else {
-            setPemeriksaanData(pemeriksaanData.map(p => p.id_pemeriksaan === formData.id_pemeriksaan ? formData : p));
+            put(`/diagnosis/${editId}`, { onSuccess: () => handleCloseModal() });
         }
-        setIsModalOpen(false);
     };
 
-    const handleDelete = (id_pemeriksaan: string) => {
+    const handleDelete = (id: number) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus data pemeriksaan ini?')) {
-            setPemeriksaanData(pemeriksaanData.filter(p => p.id_pemeriksaan !== id_pemeriksaan));
+            router.delete(`/diagnosis/${id}`);
         }
     };
 
-    const filteredData = pemeriksaanData.filter(p =>
-        p.id_pemeriksaan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.id_antrian.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.diagnosa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.keluhan.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // 3. Logika Filtering Ganda (Teks & Waktu)
+    const filteredData = pemeriksaans.filter((p) => {
+        // Cek Pencarian Teks
+        const matchSearch =
+            p.nama_pasien.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.diagnosa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.keluhan.toLowerCase().includes(searchTerm.toLowerCase());
+
+        // Cek Filter Waktu
+        let matchTime = true;
+        const hariIni = new Date();
+        const stringHariIni = `${hariIni.getFullYear()}-${String(hariIni.getMonth() + 1).padStart(2, '0')}-${String(hariIni.getDate()).padStart(2, '0')}`;
+
+        if (filterWaktu === 'harian') {
+            matchTime = p.tanggal_raw === stringHariIni;
+        } else if (filterWaktu === 'mingguan') {
+            const tanggalItem = new Date(p.tanggal_raw);
+            const mingguLalu = new Date();
+            mingguLalu.setDate(mingguLalu.getDate() - 7);
+            matchTime = tanggalItem >= mingguLalu && tanggalItem <= hariIni;
+        } else if (filterWaktu === 'bulanan') {
+            matchTime = p.tanggal_raw.substring(0, 7) === stringHariIni.substring(0, 7);
+        } else if (filterWaktu === 'tanggal_tertentu') {
+            // Jika tanggal spesifik dipilih, cocokkan. Jika belum diisi, tampilkan semua.
+            matchTime = tanggalSpesifik ? p.tanggal_raw === tanggalSpesifik : true;
+        }
+
+        return matchSearch && matchTime;
+    });
+
+    const exportToExcel = () => {
+        if (filteredData.length === 0) {
+            alert('Tidak ada data untuk di-export');
+            return;
+        }
+
+        // 1. Format data agar rapi di Excel (Menentukan Header)
+        const dataHanyaYangTampil = filteredData.map((item, index) => ({
+            No: index + 1,
+            'Tanggal Periksa': item.tanggal_format,
+            'Nama Pasien': item.nama_pasien,
+            Keluhan: item.keluhan,
+            Diagnosa: item.diagnosa,
+            Tindakan: item.tindakan,
+        }));
+
+        // 2. Buat Worksheet
+        const ws = XLSX.utils.json_to_sheet(dataHanyaYangTampil);
+
+        // 3. Buat Workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Laporan Pemeriksaan');
+
+        // 4. Generate File & Download
+        const fileName = `Laporan_Pemeriksaan_${filterWaktu}_${new Date().getTime()}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
 
     return (
-        <AppLayout>
-            <div className="space-y-6">
+        <AppLayout breadcrumbs={[{ title: 'Hasil Pemeriksaan', href: '/diagnosis' }]}>
+            <Head title="Hasil Pemeriksaan" />
+
+            <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6 lg:p-8">
                 {/* Header Actions */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                    <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:flex-row sm:items-center">
+                        <div className="relative w-full sm:w-auto">
+                            <Search className="absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400" size={18} />
                             <input
                                 type="text"
-                                placeholder="Cari ID, Antrian, Diagnosa..."
+                                placeholder="Cari Pasien, Diagnosa..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl w-64 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm bg-white transition-all shadow-sm"
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-4 pl-10 text-sm shadow-sm transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none sm:w-64"
                             />
                         </div>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors shadow-sm text-sm font-medium">
-                            <Filter size={16} />
-                            Filter
-                        </button>
+
+                        {/* Dropdown Filter Waktu */}
+                        <div className="relative w-full sm:w-auto">
+                            <div className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400">
+                                <Calendar size={18} />
+                            </div>
+                            <select
+                                value={filterWaktu}
+                                onChange={(e) => {
+                                    setFilterWaktu(e.target.value as any);
+                                    if (e.target.value !== 'tanggal_tertentu') setTanggalSpesifik(''); // Reset jika ganti mode
+                                }}
+                                className="w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-2 pr-8 pl-10 text-sm font-medium text-slate-700 shadow-sm transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none sm:w-44"
+                            >
+                                <option value="semua">Semua Waktu</option>
+                                <option value="harian">Hari Ini</option>
+                                <option value="mingguan">7 Hari Terakhir</option>
+                                <option value="bulanan">Bulan Ini</option>
+                                <option value="tanggal_tertentu">Pilih Tanggal</option>
+                            </select>
+                            <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-slate-400">
+                                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                    <path
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                        clipRule="evenodd"
+                                        fillRule="evenodd"
+                                    ></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* 4. MUNCULKAN INPUT TANGGAL JIKA "TANGGAL TERTENTU" DIPILIH */}
+                        {filterWaktu === 'tanggal_tertentu' && (
+                            <div className="animate-in zoom-in-95 w-full duration-200 sm:w-auto">
+                                <input
+                                    type="date"
+                                    value={tanggalSpesifik}
+                                    onChange={(e) => setTanggalSpesifik(e.target.value)}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none sm:w-auto"
+                                />
+                            </div>
+                        )}
                     </div>
 
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors shadow-sm text-sm font-medium w-full sm:w-auto">
+                    <div className="flex w-full items-center gap-3 sm:w-auto">
+                        <button
+                            onClick={exportToExcel}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition-colors hover:bg-slate-50 sm:w-auto"
+                        >
                             <Download size={16} />
                             Export
                         </button>
                         <button
                             onClick={openAddModal}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 text-sm font-medium w-full sm:w-auto"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-500/20 transition-colors hover:bg-emerald-600 sm:w-auto"
                         >
                             <Plus size={16} />
                             Input Hasil
@@ -120,52 +219,62 @@ export default function Pemeriksaan() {
                 </div>
 
                 {/* Table Data */}
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="animate-in fade-in slide-in-from-bottom-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm duration-500">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full border-collapse text-left">
                             <thead>
-                                <tr className="bg-slate-50/80 border-b border-slate-200">
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">ID Pemeriksaan</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">No. Antrian</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Keluhan</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Diagnosa</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Tindakan</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</th>
+                                <tr className="border-b border-slate-200 bg-slate-50/80">
+                                    <th className="px-6 py-4 text-xs font-bold tracking-wider text-slate-500 uppercase">Tanggal</th>
+                                    <th className="px-6 py-4 text-xs font-bold tracking-wider text-slate-500 uppercase">Nama Pasien</th>
+                                    <th className="w-1/4 px-6 py-4 text-xs font-bold tracking-wider text-slate-500 uppercase">Keluhan</th>
+                                    <th className="w-1/4 px-6 py-4 text-xs font-bold tracking-wider text-slate-500 uppercase">Diagnosa</th>
+                                    <th className="w-1/4 px-6 py-4 text-xs font-bold tracking-wider text-slate-500 uppercase">Tindakan</th>
+                                    <th className="px-6 py-4 text-center text-xs font-bold tracking-wider text-slate-500 uppercase">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {filteredData.map((item, index) => (
-                                    <tr key={index} className="hover:bg-slate-50/50 transition-colors group">
+                                {filteredData.map((item) => (
+                                    <tr key={item.id} className="group transition-colors hover:bg-slate-50/50">
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">{item.id_pemeriksaan}</span>
+                                            <span className="rounded-md border border-slate-200/60 bg-slate-50 px-2.5 py-1 text-sm font-medium text-slate-500">
+                                                {item.tanggal_format}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                <FileText size={16} className="text-slate-400" />
-                                                <span className="text-sm font-bold text-slate-700">{item.id_antrian}</span>
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                                    <User size={16} />
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-700">{item.nama_pasien}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-slate-600 max-w-[200px] truncate" title={item.keluhan}>{item.keluhan}</div>
+                                            <div className="max-w-[200px] truncate text-sm text-slate-600" title={item.keluhan}>
+                                                {item.keluhan}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-slate-600 max-w-[200px] truncate" title={item.diagnosa}>{item.diagnosa}</div>
+                                            <div className="max-w-[200px] truncate text-sm text-slate-600" title={item.diagnosa}>
+                                                {item.diagnosa}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-slate-600 max-w-[200px] truncate" title={item.tindakan}>{item.tindakan}</div>
+                                            <div className="max-w-[200px] truncate text-sm text-slate-600" title={item.tindakan}>
+                                                {item.tindakan}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center justify-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                            <div className="flex items-center justify-center gap-2 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                                                 <button
                                                     onClick={() => openEditModal(item)}
-                                                    className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-colors border border-blue-200/50"
+                                                    className="rounded-lg border border-blue-200/50 bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
                                                     title="Edit Hasil"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(item.id_pemeriksaan)}
-                                                    className="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-100 hover:text-rose-700 rounded-lg transition-colors border border-rose-200/50"
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="rounded-lg border border-rose-200/50 bg-rose-50 p-1.5 text-rose-600 transition-colors hover:bg-rose-100 hover:text-rose-700"
                                                     title="Hapus Hasil"
                                                 >
                                                     <Trash2 size={16} />
@@ -180,8 +289,9 @@ export default function Pemeriksaan() {
                                         <td colSpan={6} className="px-6 py-12 text-center">
                                             <div className="flex flex-col items-center justify-center text-slate-400">
                                                 <Search size={48} className="mb-4 text-slate-300" />
-                                                <p className="text-base font-medium text-slate-600">Tidak ada data pemeriksaan</p>
-                                                <p className="text-sm">Tambahkan hasil pemeriksaan baru atau ubah kata kunci pencarian.</p>
+                                                <p className="text-base font-medium text-slate-600">
+                                                    {pemeriksaans.length === 0 ? 'Belum ada riwayat pemeriksaan.' : 'Data tidak ditemukan.'}
+                                                </p>
                                             </div>
                                         </td>
                                     </tr>
@@ -189,76 +299,60 @@ export default function Pemeriksaan() {
                             </tbody>
                         </table>
                     </div>
-
-                    {/* Pagination */}
-                    <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                        <p className="text-sm text-slate-500 font-medium">
-                            Menampilkan <span className="font-bold text-slate-700">{filteredData.length > 0 ? 1 : 0}</span> sampai <span className="font-bold text-slate-700">{filteredData.length}</span> dari <span className="font-bold text-slate-700">{pemeriksaanData.length}</span> hasil
-                        </p>
-                        <div className="flex items-center gap-1">
-                            <button className="px-3 py-1.5 border border-slate-200 text-slate-400 rounded-lg bg-white cursor-not-allowed text-sm font-medium">Sebelumnya</button>
-                            <button className="px-3 py-1.5 border border-emerald-500 text-white rounded-lg bg-emerald-500 text-sm font-bold shadow-sm shadow-emerald-500/20">1</button>
-                            <button className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg bg-white hover:bg-slate-50 transition-colors text-sm font-medium">Selanjutnya</button>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            {/* Modal Form */}
+            {/* Modal Form (Sama seperti sebelumnya) */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm duration-200">
+                    <div className="animate-in zoom-in-95 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl duration-200">
+                        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                             <h3 className="text-lg font-bold text-slate-800">
                                 {modalMode === 'add' ? 'Input Hasil Pemeriksaan' : 'Edit Hasil Pemeriksaan'}
                             </h3>
                             <button
                                 onClick={handleCloseModal}
-                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                                className="rounded-xl p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+                            {modalMode === 'add' && (
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">ID Pemeriksaan</label>
-                                    <input
-                                        type="text"
-                                        name="id_pemeriksaan"
+                                    <label className="text-sm font-medium text-slate-700">Pilih Pasien (Dalam Pemeriksaan)</label>
+                                    <select
                                         required
-                                        value={formData.id_pemeriksaan}
-                                        onChange={handleInputChange}
-                                        readOnly={modalMode === 'edit'}
-                                        className={`w-full px-4 py-2.5 rounded-xl border text-sm transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 ${modalMode === 'edit' ? 'bg-slate-50 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-200 text-slate-800'
-                                            }`}
-                                        placeholder="Contoh: PMR-001"
-                                    />
+                                        value={data.antrian_id}
+                                        onChange={(e) => setData('antrian_id', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none"
+                                    >
+                                        <option value="" disabled>
+                                            -- Pilih Pasien --
+                                        </option>
+                                        {antrianAktif.map((antrian) => (
+                                            <option key={antrian.id} value={antrian.id}>
+                                                {antrian.nama}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {antrianAktif.length === 0 && (
+                                        <p className="mt-1 text-xs text-rose-500">
+                                            Tidak ada pasien yang berstatus "Sedang Diperiksa" di halaman antrian.
+                                        </p>
+                                    )}
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-medium text-slate-700">No. Antrian</label>
-                                    <input
-                                        type="text"
-                                        name="id_antrian"
-                                        required
-                                        value={formData.id_antrian}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
-                                        placeholder="Contoh: A01"
-                                    />
-                                </div>
-                            </div>
+                            )}
 
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-slate-700">Keluhan Pasien</label>
                                 <textarea
-                                    name="keluhan"
                                     required
-                                    value={formData.keluhan}
-                                    onChange={handleInputChange}
+                                    value={data.keluhan}
+                                    onChange={(e) => setData('keluhan', e.target.value)}
                                     rows={2}
-                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 resize-none"
+                                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none"
                                     placeholder="Keluhan utama..."
                                 />
                             </div>
@@ -266,12 +360,11 @@ export default function Pemeriksaan() {
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-slate-700">Diagnosa</label>
                                 <textarea
-                                    name="diagnosa"
                                     required
-                                    value={formData.diagnosa}
-                                    onChange={handleInputChange}
+                                    value={data.diagnosa}
+                                    onChange={(e) => setData('diagnosa', e.target.value)}
                                     rows={2}
-                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 resize-none"
+                                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none"
                                     placeholder="Hasil diagnosa dokter..."
                                 />
                             </div>
@@ -279,30 +372,30 @@ export default function Pemeriksaan() {
                             <div className="space-y-1.5">
                                 <label className="text-sm font-medium text-slate-700">Tindakan</label>
                                 <textarea
-                                    name="tindakan"
                                     required
-                                    value={formData.tindakan}
-                                    onChange={handleInputChange}
+                                    value={data.tindakan}
+                                    onChange={(e) => setData('tindakan', e.target.value)}
                                     rows={2}
-                                    className="w-full px-4 py-2.5 bg-white border border-slate-200 text-slate-800 rounded-xl text-sm transition-all focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 resize-none"
+                                    className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none"
                                     placeholder="Tindakan yang diberikan..."
                                 />
                             </div>
 
-                            <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                            <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                                 <button
                                     type="button"
                                     onClick={handleCloseModal}
-                                    className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors"
+                                    className="rounded-xl bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
                                 >
                                     Batal
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition-colors shadow-sm shadow-emerald-500/20"
+                                    disabled={processing}
+                                    className="flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm shadow-emerald-500/20 transition-colors hover:bg-emerald-600 disabled:opacity-50"
                                 >
                                     <Save size={16} />
-                                    {modalMode === 'add' ? 'Simpan Data' : 'Simpan Perubahan'}
+                                    {processing ? 'Menyimpan...' : 'Simpan Data'}
                                 </button>
                             </div>
                         </form>

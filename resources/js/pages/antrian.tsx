@@ -179,7 +179,7 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-right">
-                                                {/* Tombol Periksa (Bisa diklik jika pasien sedang 'menunggu') */}
+                                                
                                                 {item.status === 'menunggu' && (
                                                     <Link
                                                         href={`/antrian/${item.id}/periksa`}
