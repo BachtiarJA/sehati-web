@@ -19,13 +19,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::create([
+            'name' => 'Admin Klinik',
+            'email' => 'admin@klinik.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin', // Role baru
+        ]);
         // ==========================================
         // 1. BUAT AKUN & PROFIL DOKTER
         // ==========================================
         $userDokter = User::create([
             'name' => 'dr. Budi Santoso',
             'email' => 'dokter@klinik.com',
-            'password' => Hash::make('password'), 
+            'password' => Hash::make('password'),
             'role' => 'dokter',
         ]);
 

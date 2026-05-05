@@ -3,6 +3,9 @@
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PemeriksaanController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\KelolaDokterController;
+use App\Http\Controllers\Admin\PendaftaranController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -10,6 +13,20 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    // Dashboard Admin
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // Kelola Dokter (Tambah, Edit, Hapus)
+    Route::resource('dokter', KelolaDokterController::class);
+
+    // Pendaftaran Pasien Langsung & Antrian
+    Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
+    Route::post('/pendaftaran/akun-baru', [PendaftaranController::class, 'buatAkunPasien'])->name('pendaftaran.akun_baru');
+    Route::post('/pendaftaran/antrian', [PendaftaranController::class, 'tambahAntrian'])->name('pendaftaran.antrian');
+
+});
 Route::middleware(['auth', 'role:dokter'])->group(function () {
 
 
