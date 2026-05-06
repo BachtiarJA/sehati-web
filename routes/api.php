@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingController;
+
+// ===========================================
+// RUTE PUBLIK (Tidak butuh Token)
+// ===========================================
+Route::post('/mobile/login', [AuthController::class, 'login']);
+
+// ===========================================
+// RUTE PRIVATE (HANYA BISA DIAKSES JIKA ADA BEARER TOKEN)
+// ===========================================
+Route::middleware('auth:sanctum')->group(function () {
+
+    // Booking Antrian
+    Route::post('/mobile/booking', [BookingController::class, 'store']);
+
+    // Logout Mobile (Untuk menghapus token)
+    Route::post('/mobile/logout', [AuthController::class, 'logout']);
+
+    // Cek Data Profile User saat ini
+    Route::get('/mobile/profile', function (Request $request) {
+        return response()->json([
+            'user' => $request->user(),
+            'pasien' => $request->user()->pasien
+        ]);
+    });
+
+});
