@@ -6,6 +6,7 @@ use App\Http\Controllers\PemeriksaanController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\KelolaDokterController;
 use App\Http\Controllers\Admin\PendaftaranController;
+use App\Http\Controllers\RekamMedisController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -35,6 +36,7 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
     Route::get('/antrian', [AntrianController::class, 'index'])->name('antrian');
 
     Route::patch('/antrian/{id}/periksa', [AntrianController::class, 'periksa'])->name('antrian.periksa');
+    Route::get('/rekam-medis', [RekamMedisController::class, 'index'])->name('rekam-medis');
 
     Route::get('/diagnosis', [PemeriksaanController::class, 'index'])->name('diagnosis');
     Route::post('/diagnosis', [PemeriksaanController::class, 'store'])->name('diagnosis.store');
