@@ -37,7 +37,7 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
 
     Route::patch('/antrian/{id}/periksa', [AntrianController::class, 'periksa'])->name('antrian.periksa');
     Route::get('/rekam-medis', [RekamMedisController::class, 'index'])->name('rekam-medis');
-
+    Route::get('/rekam-medis/{id}/export-word', [App\Http\Controllers\RekamMedisController::class, 'exportWord'])->name('rekam-medis.export');
     Route::get('/diagnosis', [PemeriksaanController::class, 'index'])->name('diagnosis');
     Route::post('/diagnosis', [PemeriksaanController::class, 'store'])->name('diagnosis.store');
     Route::put('/diagnosis/{id}', [PemeriksaanController::class, 'update'])->name('diagnosis.update');

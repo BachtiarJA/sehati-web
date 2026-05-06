@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { Activity, Calendar, ChevronRight, FileText, History, Search, User, UserCircle } from 'lucide-react';
+import { Activity, Calendar, ChevronRight, Download, FileText, History, Search, User, UserCircle } from 'lucide-react';
 import { useState } from 'react';
 
 interface Riwayat {
@@ -126,6 +126,15 @@ export default function RekamMedis({ pasiens = [] }: Props) {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* TOMBOL EXPORT WORD DITAMBAHKAN DI SINI */}
+                                    <a
+                                        href={`/rekam-medis/${selectedPasien.id}/export-word`}
+                                        className="flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-teal-700 hover:shadow-md focus:ring-4 focus:ring-teal-500/20 focus:outline-none sm:shrink-0"
+                                    >
+                                        <Download size={18} />
+                                        Export Word
+                                    </a>
                                 </div>
 
                                 {/* Timeline Riwayat */}
