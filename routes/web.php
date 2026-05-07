@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PemeriksaanController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\KelolaDokterController;
@@ -26,6 +27,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
     Route::post('/pendaftaran/akun-baru', [PendaftaranController::class, 'buatAkunPasien'])->name('pendaftaran.akun_baru');
     Route::post('/pendaftaran/antrian', [PendaftaranController::class, 'tambahAntrian'])->name('pendaftaran.antrian');
+    Route::get('/daftar-obat', [ObatController::class, 'index'])->name('daftar-obat.index');
+    Route::post('/daftar-obat', [ObatController::class, 'store'])->name('daftar-obat.store');
+    Route::delete('/daftar-obat/{id}', [ObatController::class, 'destroy'])->name('daftar-obat.destroy');
 
 });
 Route::middleware(['auth', 'role:dokter'])->group(function () {

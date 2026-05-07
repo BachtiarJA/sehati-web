@@ -8,6 +8,7 @@ use App\Models\Pasien;
 use App\Models\Antrian;
 use App\Models\Pemeriksaan;
 use App\Models\ResepObat;
+use App\Models\Obat; // Tambahan Import Model Obat
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -23,8 +24,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin Klinik',
             'email' => 'admin@klinik.com',
             'password' => Hash::make('password'),
-            'role' => 'admin', // Role baru
+            'role' => 'admin',
         ]);
+
         // ==========================================
         // 1. BUAT AKUN & PROFIL DOKTER
         // ==========================================
@@ -53,7 +55,7 @@ class DatabaseSeeder extends Seeder
         for ($i = 0; $i < 3; $i++) {
             $userPasien = User::create([
                 'name' => $namaPasien[$i],
-                'email' => 'pasien' . ($i + 1) . '@gmail.com', // pasien1@gmail.com, dst
+                'email' => 'pasien' . ($i + 1) . '@gmail.com',
                 'password' => Hash::make('password'),
                 'role' => 'pasien',
             ]);
@@ -68,11 +70,27 @@ class DatabaseSeeder extends Seeder
         }
 
         // ==========================================
-        // 3. BUAT DATA ANTRIAN HARI INI
+        // 3. BUAT DATA MASTER OBAT (BARU)
+        // ==========================================
+        $obat1 = Obat::create([
+            'kode_obat' => 'OBT-001',
+            'nama_obat' => 'Paracetamol 500mg',
+            'kategori' => 'Analgesik',
+            'jenis' => 'tablet',
+        ]);
+
+        $obat2 = Obat::create([
+            'kode_obat' => 'OBT-002',
+            'nama_obat' => 'Amoxicillin 500mg',
+            'kategori' => 'Antibiotik',
+            'jenis' => 'kapsul',
+        ]);
+
+        // ==========================================
+        // 4. BUAT DATA ANTRIAN HARI INI
         // ==========================================
         $hariIni = Carbon::today();
 
-        // A. Pasien 1: Status "Selesai"
         $antrianSelesai = Antrian::create([
             'pasien_id' => $pasiens[0]->id,
             'dokter_id' => $dokter->id,
@@ -81,7 +99,6 @@ class DatabaseSeeder extends Seeder
             'status' => 'selesai',
         ]);
 
-        // B. Pasien 2 & 3: Status "Menunggu"
         Antrian::create([
             'pasien_id' => $pasiens[1]->id,
             'dokter_id' => $dokter->id,
@@ -99,7 +116,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // ==========================================
-        // 4. BUAT PEMERIKSAAN & RESEP (Untuk Pasien Selesai)
+        // 5. BUAT PEMERIKSAAN & RESEP OBAT (DIUPDATE)
         // ==========================================
         $pemeriksaan = Pemeriksaan::create([
             'antrian_id' => $antrianSelesai->id,
@@ -108,26 +125,30 @@ class DatabaseSeeder extends Seeder
             'tindakan' => 'Pemeriksaan fisik dan pemberian resep obat jalan.',
         ]);
 
+        // Perbaikan struktur Resep Obat sesuai migrasi terbaru
         ResepObat::create([
+            'pasien_id' => $pasiens[0]->id,        // Kolom Baru
             'pemeriksaan_id' => $pemeriksaan->id,
-            'nama_obat' => 'Paracetamol',
+            'obat_id' => $obat1->id,               // Menggunakan obat_id (Paracetamol)
             'dosis' => '500mg',
-            'aturan' => 'Sesudah Makan',
-            'berapa_kali' => 3,
-            'waktu' => ['08:00', '13:00', '20:00'], // Akan otomatis di-convert ke JSON
+            'jumlah' => 10,                        // Kolom Baru
+            'berapa_kali' => '3 x Sehari',         // Diubah menjadi tipe string
+            'waktu' => json_encode(['08:00', '13:00', '20:00']), // Disimpan sebagai JSON untuk alarm
+            'berapa_hari' => 3,                    // Kolom Baru
+            'status_alarm' => 'aktif',             // Kolom Baru
+            'keterangan' => 'Diminum sesudah makan' // Pengganti kolom aturan
         ]);
 
         // ==========================================
-        // 5. BUAT DATA ANTRIAN MASA LALU (Untuk Simulasi Grafik)
+        // 6. BUAT DATA ANTRIAN MASA LALU
         // ==========================================
-        // Membuat random pasien dalam 6 hari ke belakang agar grafik di dashboard terisi
         for ($i = 1; $i <= 6; $i++) {
             $tglMundur = Carbon::today()->subDays($i);
-            $jumlahPasienAcak = rand(5, 20); // Acak antara 5 sampai 20 pasien per hari
+            $jumlahPasienAcak = rand(5, 20);
 
             for ($j = 0; $j < $jumlahPasienAcak; $j++) {
                 Antrian::create([
-                    'pasien_id' => $pasiens[rand(0, 2)]->id, // Acak pakai data pasien yg ada
+                    'pasien_id' => $pasiens[rand(0, 2)]->id,
                     'dokter_id' => $dokter->id,
                     'tgl_kunjungan' => $tglMundur,
                     'no_antrian' => $j + 1,

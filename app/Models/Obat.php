@@ -5,19 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ResepObat extends Model
+class Obat extends Model
 {
     use HasFactory;
 
     protected $guarded = ['id'];
 
-    public function obat()
+    public function resepObats()
     {
-        return $this->belongsTo(Obat::class);
-    }
-
-    public function pasien()
-    {
-        return $this->belongsTo(Pasien::class);
+        return $this->hasMany(ResepObat::class);
     }
 }
