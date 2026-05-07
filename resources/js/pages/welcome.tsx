@@ -3,7 +3,6 @@ import {
   Stethoscope,
   Clock,
   ShieldCheck,
-  UserCheck,
   CalendarCheck,
   Phone,
   Mail,
@@ -11,409 +10,486 @@ import {
   ArrowRight,
   Activity,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  Smartphone,
+  Globe2,
+  Users,
+  Smile,
+  FileText,
+  Bell,
+  Check,
+  Star
 } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 
 function Home() {
   return (
-    <div className="font-sans text-slate-800 bg-[#FAFAFC] flex flex-col min-h-screen overflow-x-hidden selection:bg-teal-200 selection:text-teal-900">
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+      `}</style>
+      <div style={{ fontFamily: "'Inter', sans-serif" }} className="text-slate-800 bg-[#FAFAFC] flex flex-col min-h-screen overflow-x-hidden selection:bg-[#04989F]/30 selection:text-[#04989F]">
 
-      {/* Decorative Top Blur */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-teal-400/20 rounded-full blur-[100px] pointer-events-none z-0 mix-blend-multiply"></div>
-      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-orange-400/10 rounded-full blur-[100px] pointer-events-none z-0 mix-blend-multiply"></div>
+        {/* Decorative Top Blur */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#04989F]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
+        <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] bg-[#D66604]/5 rounded-full blur-[100px] pointer-events-none z-0"></div>
 
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 glass-panel border-b border-white/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-lg group-hover:shadow-teal-500/30 transition-all duration-300">
-                <HeartPulse className="text-white w-6 h-6" />
+        {/* Navbar */}
+        <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-20 items-center">
+              <div className="flex-shrink-0 flex items-center gap-3 cursor-pointer group">
+                <img src="/logo.png" alt="Sehati Medika" className="h-10 w-auto object-contain" />
+                <span className="font-bold text-2xl tracking-tight text-slate-900">Sehati Medika</span>
               </div>
-              <span className="font-extrabold text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-700 to-teal-900">Sehati Medika</span>
-            </div>
-            <div className="hidden md:flex space-x-10 items-center">
-              {['Beranda', 'Layanan', 'Fitur'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase().replace(' ', '')}`} className="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors relative group">
-                  {item}
-                  <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full rounded-full"></span>
-                </a>
-              ))}
-              <Link href="/about" className="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors relative group">
-                Tentang Kami
-                <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full rounded-full"></span>
-              </Link>
-            </div>
-            <div className="hidden md:flex items-center gap-4 animate-slide-up">
-              <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors">Masuk</Link>
-              <Link href="/register" className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white px-7 py-2.5 rounded-full font-bold text-sm transition-all shadow-lg shadow-teal-500/30 transform hover:-translate-y-0.5 border border-teal-400/20 inline-block">
-                Daftar
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section id="beranda" className="pt-24 pb-32 relative z-10 w-full overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
-            <div className="w-full lg:w-[55%] space-y-8 text-center lg:text-left z-20">
-
-              <div className="animate-slide-up inline-flex items-center gap-2 px-4 py-2 rounded-full border border-teal-500/20 bg-teal-50 text-teal-700 font-bold text-sm shadow-sm backdrop-blur-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse"></span>
-                Pelayanan 24/7 Tersedia
+              <div className="hidden md:flex space-x-10 items-center">
+                {['Beranda', 'Tentang Kami', 'Fitur'].map((item) => (
+                  <a key={item} href={`#${item.toLowerCase().replace(' ', '')}`} className="text-sm font-semibold text-slate-600 hover:text-[#04989F] transition-colors relative group">
+                    {item}
+                    <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#04989F] transition-all group-hover:w-full rounded-full"></span>
+                  </a>
+                ))}
+                <Link href="#kontak" className="text-sm font-semibold text-slate-600 hover:text-[#04989F] transition-colors relative group">
+                  Kontak
+                  <span className="absolute -bottom-1.5 left-0 w-0 h-0.5 bg-[#04989F] transition-all group-hover:w-full rounded-full"></span>
+                </Link>
               </div>
-
-              <h1 className="animate-slide-up animation-delay-200 text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
-                Layanan Kesehatan <br />
-                <span className="text-gradient from-teal-500 via-teal-600 to-teal-800">Masa Depan</span>
-              </h1>
-
-              <p className="animate-slide-up animation-delay-400 text-lg lg:text-xl text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
-                Sehati Medika menghadirkan pengalaman medis premium. Terintegrasi, cepat, dan profesional demi hidup Anda yang lebih bahagia.
-              </p>
-
-              <div className="animate-slide-up animation-delay-400 flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-6">
-                <Button size="lg" className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-400 text-white px-8 h-14 rounded-full font-bold text-lg transition-all shadow-[0_8px_30px_rgb(249,115,22,0.3)] hover:shadow-[0_8px_30px_rgb(249,115,22,0.5)] transform hover:-translate-y-1 flex items-center justify-center gap-3">
-                  <span className="relative z-10 flex items-center gap-2">Konsultasi Sekarang <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" /></span>
-                </Button>
-                <Button variant="outline" size="lg" className="glass-card hover:bg-white border text-slate-700 px-8 h-14 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-3">
-                  <Phone size={22} className="text-teal-600" /> Hubungi Darurat
-                </Button>
-              </div>
-
-              <div className="animate-slide-up animation-delay-400 pt-8 flex items-center justify-center lg:justify-start gap-6">
-                <div className="flex -space-x-3">
-                  <img className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop" alt="User" />
-                  <img className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" alt="User" />
-                  <img className="w-12 h-12 rounded-full border-4 border-white shadow-sm object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="User" />
-                  <div className="w-12 h-12 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center shadow-sm text-sm font-bold text-slate-600">+2k</div>
-                </div>
-                <div className="text-sm font-medium text-slate-600 leading-tight">
-                  Dipercaya oleh<br/><span className="text-slate-900 font-extrabold text-base">Ribuan Pasien</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full lg:w-[45%] relative mt-12 lg:mt-0 animate-float-delayed flex justify-center">
-
-              <div className="relative w-full max-w-[500px] aspect-[4/5]">
-                <div className="absolute inset-0 bg-gradient-to-tr from-teal-400 to-teal-200 rounded-[60px] rotate-[10deg] opacity-60 blur-lg mix-blend-multiply border-white/20"></div>
-                <div className="absolute inset-0 bg-gradient-to-bl from-orange-400 to-orange-200 rounded-[60px] -rotate-6 opacity-60 blur-lg mix-blend-multiply"></div>
-
-                <div className="absolute inset-0 rounded-[48px] overflow-hidden border-[6px] border-white/80 shadow-2xl glass z-10 bg-white/30 backdrop-blur-sm">
-                  <img
-                    src="https://images.unsplash.com/photo-1638202993928-7267aad84c31?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                    alt="Premium Healthcare Illustration"
-                    className="w-full h-full object-cover mix-blend-overlay opacity-90"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                    alt="Healthcare Doctor"
-                    className="absolute inset-0 w-full h-full object-cover z-20"
-                  />
-                </div>
-
-                <div className="absolute -bottom-6 -left-10 glass-panel p-5 rounded-3xl shadow-2xl z-30 flex items-center gap-5 animate-float border border-white">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-400 to-green-500 shadow-inner flex items-center justify-center text-white">
-                    <UserCheck size={30} />
-                  </div>
-                  <div>
-                    <h4 className="text-3xl font-extrabold text-slate-800">4.9/5</h4>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rating Pasien</p>
-                  </div>
-                </div>
-
-                <div className="absolute top-12 -right-8 glass-panel p-4 rounded-2xl shadow-xl z-30 flex items-center gap-4 animate-float animation-delay-200 border border-white">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-500">
-                    <ShieldCheck size={22} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-extrabold text-slate-800">Terlisensi</p>
-                    <p className="text-xs text-slate-500">Kemenkes RI</p>
-                  </div>
-                </div>
-
+              <div className="hidden md:flex items-center gap-4 animate-slide-up">
+                <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-[#04989F] transition-colors">Masuk</Link>
+                <Link href="/register" className="bg-[#04989F] hover:bg-[#037d83] text-white px-7 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 inline-block">
+                  Daftar
+                </Link>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </nav>
 
-      {/* Mengapa Harus Sehati Medika */}
-      <section id="layanan" className="py-28 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20 max-w-3xl mx-auto">
-            <p className="text-teal-600 font-bold tracking-widest uppercase text-sm mb-3">Keunggulan 🌟</p>
-            <h2 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Kualitas Premium <br/>Sebagai <span className="text-gradient from-orange-400 to-orange-600">Standar Kami</span></h2>
-            <p className="text-slate-600 text-lg font-medium">Bukan sekadar klinik biasa, kami menggabungkan hospitalitas tingkat VIP dengan teknologi medis terkini untuk Anda.</p>
-          </div>
+        {/* Hero Section */}
+        <section id="beranda" className="pt-20 pb-28 relative z-10 w-full overflow-hidden bg-gradient-to-b from-white to-[#FAFAFC]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+              <div className="w-full lg:w-[50%] space-y-8 text-center lg:text-left z-20 pt-10">
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-
-            <div className="grid gap-6">
-              {[
-                { icon: Stethoscope, title: "Spesialis Berdedikasi", desc: "Ditangani oleh dokter spesialis board-certified dari lulusan terbaik.", color: "from-blue-400 to-blue-600", shadow: "shadow-blue-500/20", iconColor: "text-blue-600", bgIcon: "bg-blue-50" },
-                { icon: ShieldCheck, title: "Sterilisasi Tingkat Tinggi", desc: "Protokol kebersihan berstandar internasional yang menjamin ruang steril setiap saat.", color: "from-teal-400 to-teal-600", shadow: "shadow-teal-500/20", iconColor: "text-teal-600", bgIcon: "bg-teal-50" },
-                { icon: Activity, title: "Laboratorium Terpadu", desc: "Fasilitas diagnostik in-house kami memberikan hasil yang presisi dan instan.", color: "from-purple-400 to-purple-600", shadow: "shadow-purple-500/20", iconColor: "text-purple-600", bgIcon: "bg-purple-50" },
-                { icon: Clock, title: "Tanpa Antrean Lama", desc: "Ekosistem digital membuat Anda hemat waktu dengan penjadwalan presisi.", color: "from-orange-400 to-orange-500", shadow: "shadow-orange-500/20", iconColor: "text-orange-500", bgIcon: "bg-orange-50" },
-              ].map((item, idx) => (
-                <div key={idx} className="glass-panel p-6 rounded-3xl flex gap-6 items-start group hover:-translate-y-1 transition-all duration-300">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${item.color} shadow-lg ${item.shadow} text-white transform group-hover:rotate-6 transition-transform duration-300`}>
-                    <item.icon size={28} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-extrabold text-slate-800 mb-2">{item.title}</h3>
-                    <p className="text-slate-600 font-medium leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="relative w-full aspect-square max-w-lg mx-auto lg:ml-auto perspective-1000">
-               {/* 3D Glass Artwork */}
-               <div className="absolute inset-0 bg-gradient-to-br from-teal-100 to-orange-50 rounded-full blur-3xl opacity-70 animate-blob mix-blend-multiply"></div>
-               <div className="relative w-full h-full glass-card rounded-[40px] p-6 overflow-hidden transform rotate-2 hover:rotate-0 transition-transform duration-700">
-                  <img
-                    src="https://images.unsplash.com/photo-1519494140681-8b17d7b0f693?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                    alt="Premium Healthcare"
-                    className="w-full h-full object-cover rounded-[32px]"
-                  />
-                  {/* Overlay Gradient on Image */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 m-6 rounded-[32px]"></div>
-
-                  <div className="absolute bottom-12 left-12 right-12 z-20">
-                    <div className="glass-panel rounded-2xl p-5 border border-white/30 backdrop-blur-md">
-                      <p className="text-slate-800 font-extrabold text-lg flex items-center gap-2 relative">
-                         "Saya merasa seperti dirawat oleh keluarga sendiri."
-                      </p>
-                      <p className="text-slate-500 text-sm font-semibold mt-2">– Anisa, Pasien</p>
-                    </div>
-                  </div>
-               </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Fitur Utama */}
-      <section id="fitur" className="py-28 bg-[#0F172A] relative overflow-hidden">
-
-        {/* Dark aesthetic background accents */}
-        <div className="absolute top-0 right-0 w-full h-[1px] bg-gradient-to-r from-transparent via-teal-500/50 to-transparent"></div>
-        <div className="absolute top-1/4 left-0 w-96 h-96 bg-teal-500/20 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl lg:text-5xl font-extrabold text-white mb-6 tracking-tight">Teknologi di Genggaman <br/>Untuk <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-200">Kesehatan Maksimal</span></h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto font-medium">Bukan hanya janji, tapi platform yang secara nyata memudahkan administrasi medis Anda agar bisa fokus pada proses penyembuhan.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: CalendarCheck, title: "Booking Online", desc: "Pilih jadwal, atur pertemuan hitungan detik.", gradient: "from-blue-400 to-blue-600" },
-              { icon: Stethoscope, title: "Telekonsultasi", desc: "Temui dokter ahli via video hd, kapan pun di mana pun.", gradient: "from-pink-400 to-rose-500" },
-              { icon: Activity, title: "Health Tracker", desc: "Sinkronisasi otomatis dengan health kit di smartphone.", gradient: "from-teal-400 to-emerald-500" },
-              { icon: ShieldCheck, title: "Resep Digital", desc: "Tebus obat yang diresepkan dan langsung antar ke pintu.", gradient: "from-orange-400 to-amber-500" }
-            ].map((feature, idx) => (
-              <div key={idx} className="group relative bg-[#1E293B]/80 backdrop-blur-sm border border-slate-700/50 p-8 rounded-[32px] hover:bg-[#1E293B] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center text-white mb-8 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 relative z-10`}>
-                  <feature.icon size={28} />
+                <div className="animate-slide-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04989F]/10 text-[#04989F] font-bold text-sm">
+                  <HeartPulse size={16} className="text-[#04989F]" />
+                  Selamat Datang di Sehati Medika!
                 </div>
 
-                <h3 className="text-2xl font-extrabold text-white mb-3 relative z-10">{feature.title}</h3>
-                <p className="text-slate-400 font-medium leading-relaxed relative z-10">
-                  {feature.desc}
+                <h1 className="animate-slide-up animation-delay-200 text-4xl lg:text-6xl font-extrabold text-slate-900 leading-[1.15] tracking-tight">
+                  Sahabat Keluarga <span className="text-[#04989F]">Anda</span>
+                </h1>
+
+                <p className="animate-slide-up animation-delay-400 text-lg text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0 font-medium">
+                  Sehati Medika adalah solusi sederhana dan terpercaya untuk kebutuhan kesehatan sehari-hari. Dengan fokus pada layanan poli umum, Sehati Medika membantu Anda mendapatkan pemeriksaan, konsultasi, dan penanganan medis dengan cepat dan tepat.
                 </p>
 
-                <div className="mt-8 flex items-center text-sm font-bold text-slate-300 group-hover:text-white transition-colors cursor-pointer relative z-10">
-                  <span>Pelajari lebih lanjut</span>
-                  <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                <div className="animate-slide-up animation-delay-400 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                  <Button size="lg" className="bg-[#04989F] hover:bg-[#037d83] text-white px-8 h-14 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3 border-0">
+                    Konsultasi Sekarang <ArrowRight size={20} />
+                  </Button>
+                  <Button variant="outline" size="lg" className="bg-white border-slate-200 hover:bg-slate-50 text-slate-700 px-8 h-14 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-sm">
+                    <Phone size={20} className="text-[#04989F]" /> Hubungi Klinik
+                  </Button>
+                </div>
+
+              </div>
+
+              <div className="w-full lg:w-[50%] relative mt-16 lg:mt-0 flex justify-center items-center h-[500px]">
+                {/* Clean, Neat UI Composition instead of Sci-fi Orbs */}
+                <div className="relative w-full max-w-[500px] h-full flex items-center justify-center">
+                  
+                  {/* Base Circle Decoration */}
+                  <div className="absolute w-[400px] h-[400px] bg-[#04989F]/5 rounded-full z-0"></div>
+                  
+                  {/* Main Card */}
+                  <div className="relative z-10 bg-white p-6 rounded-3xl shadow-xl border border-slate-100 w-80 animate-float">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-full bg-[#04989F]/10 flex items-center justify-center">
+                        <Stethoscope size={24} className="text-[#04989F]" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900">Poli Umum</h4>
+                        <p className="text-sm text-slate-500">Buka Hari Ini</p>
+                      </div>
+                      <div className="ml-auto w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                       <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <CheckCircle2 size={18} className="text-[#04989F]" />
+                          <span className="text-sm font-medium text-slate-700">Pelayanan Cepat</span>
+                       </div>
+                       <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <CheckCircle2 size={18} className="text-[#04989F]" />
+                          <span className="text-sm font-medium text-slate-700">Dokter Berpengalaman</span>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Card Right */}
+                  <div className="absolute top-1/4 -right-4 bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4 animate-float-delayed z-20">
+                     <div className="w-10 h-10 rounded-full bg-[#D66604]/10 flex items-center justify-center">
+                        <Smile size={20} className="text-[#D66604]" />
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-slate-900">Ramah Anak</p>
+                        <p className="text-xs text-slate-500">Semua Kalangan</p>
+                     </div>
+                  </div>
+
+                  {/* Floating Card Bottom */}
+                  <div className="absolute bottom-1/4 -left-8 bg-white p-4 rounded-2xl shadow-lg border border-slate-100 flex items-center gap-4 animate-float z-20">
+                     <div className="w-10 h-10 rounded-full bg-[#04989F]/10 flex items-center justify-center">
+                        <Clock size={20} className="text-[#04989F]" />
+                     </div>
+                     <div>
+                        <p className="text-sm font-bold text-slate-900">Praktis</p>
+                        <p className="text-xs text-slate-500">Tanpa Antre Lama</p>
+                     </div>
+                  </div>
+
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Cara Kerja */}
-      <section className="py-28 bg-[#FAFAFC] relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Tentang Kami / Mengapa Harus Sehati Medika */}
+        <section id="tentangkami" className="pt-12 pb-28 relative bg-white border-y border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* Header / Title Centered */}
+            <div className="text-center mb-12 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#04989F]/10 text-[#04989F] font-bold text-sm mb-6">
+                 <Star size={16} /> Keunggulan Kami
+              </div>
+              <h2 className="text-3xl lg:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">Mengapa Harus <span className="text-[#04989F]">Sehati Medika?</span></h2>
+              <p className="text-slate-600 text-lg font-medium">Kami berkomitmen memberikan pelayanan medis yang terbaik, cepat, dan nyaman untuk Anda dan keluarga.</p>
+            </div>
 
-          <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="w-full lg:w-1/2 flex justify-center relative">
-
-              <div className="absolute inset-0 bg-gradient-to-tr from-teal-200 to-emerald-100 rounded-full blur-[100px] opacity-60"></div>
-
-              {/* Premium Phone Mockup Display */}
-              <div className="relative w-[320px] h-[650px] bg-white rounded-[50px] shadow-[0_30px_60px_rgba(0,0,0,0.12)] p-2 border-slate-200 border transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500 z-10">
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-full z-30"></div>
-
-                <div className="w-full h-full overflow-hidden rounded-[40px] relative bg-slate-900">
-                  <img
-                    src="https://images.unsplash.com/photo-1616423640778-28d1b53229bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=800&q=80"
-                    alt="App Screen UI Design"
-                    className="w-full h-full object-cover opacity-90"
-                  />
-                  {/* UI App Overlay Elements to make it feel like real app mockup */}
-                   <div className="absolute bottom-6 inset-x-6">
-                      <div className="glass-panel p-4 rounded-2xl flex items-center gap-4 bg-white/90">
-                         <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center">
-                            <CheckCircle2 size={24} />
+            <div className="flex flex-col lg:flex-row gap-16 items-center">
+              
+              {/* Image Section */}
+              <div className="w-full lg:w-1/2">
+                <div className="relative">
+                   <div className="absolute -inset-4 bg-gradient-to-r from-[#04989F]/20 to-[#D66604]/20 rounded-[40px] blur-xl"></div>
+                   <img src="/2021-06-24.webp" alt="Klinik Sehati Medika" className="relative w-full h-[450px] object-cover rounded-3xl shadow-2xl" />
+                   
+                   {/* Floating badge */}
+                   <div className="absolute -bottom-6 -right-6 bg-white p-5 rounded-3xl shadow-xl border border-slate-100 animate-float hidden sm:block">
+                      <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 bg-[#04989F]/10 rounded-full flex items-center justify-center">
+                            <Star className="text-[#04989F]" size={16} />
                          </div>
                          <div>
-                            <p className="font-bold text-slate-800 text-sm">Booking Sukses</p>
-                            <p className="text-xs font-semibold text-slate-500">Dr. Sarah - 10:00 AM</p>
+                            <p className="font-bold text-slate-900 text-sm">Terpercaya</p>
+                            <p className="text-slate-500 text-[10px] uppercase tracking-wider">Pilihan Keluarga</p>
                          </div>
                       </div>
                    </div>
                 </div>
               </div>
 
-              <div className="absolute -bottom-10 -right-10 w-[250px] h-[300px] bg-gradient-to-tl from-orange-400 to-orange-300 rounded-[40px] rotate-[10deg] opacity-20 blur-xl z-0"></div>
+              {/* Text Section (Urut ke bawah) */}
+              <div className="w-full lg:w-1/2">
+                <div className="space-y-4">
+                  {/* Item 1 */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-[#04989F]/10 flex items-center justify-center flex-shrink-0 text-[#04989F]">
+                        <Clock size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Pelayanan Cepat & Praktis</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">Datang, periksa, dan langsung ditangani dengan alur yang jelas dan efisien.</p>
+                     </div>
+                  </div>
 
-            </div>
+                  {/* Item 2 */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-[#D66604]/10 flex items-center justify-center flex-shrink-0 text-[#D66604]">
+                        <Activity size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Fokus Kebutuhan Dasar</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">Menangani berbagai keluhan sehari-hari seperti demam, flu, hingga kontrol rutin.</p>
+                     </div>
+                  </div>
 
-            <div className="w-full lg:w-1/2 z-20">
-              <div className="mb-12">
-                <p className="text-teal-600 font-bold tracking-widest uppercase text-sm mb-3">Onboarding 🎯</p>
-                <h2 className="text-4xl lg:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">5 Langkah Menuju <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">Hidup Lebih Sehat</span></h2>
+                  {/* Item 3 */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-[#04989F]/10 flex items-center justify-center flex-shrink-0 text-[#04989F]">
+                        <Stethoscope size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Tenaga Medis Profesional</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">Ditangani oleh tenaga kesehatan tersertifikasi yang berpengalaman.</p>
+                     </div>
+                  </div>
+
+                  {/* Item 4 */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-[#D66604]/10 flex items-center justify-center flex-shrink-0 text-[#D66604]">
+                        <Smile size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Suasana Nyaman & Ramah</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">Pelayanan tidak kaku, santai tapi tetap profesional dan mengutamakan pasien.</p>
+                     </div>
+                  </div>
+
+                  {/* Item 5 */}
+                  <div className="flex items-start gap-4">
+                     <div className="w-10 h-10 rounded-xl bg-[#04989F]/10 flex items-center justify-center flex-shrink-0 text-[#04989F]">
+                        <Users size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-base font-bold text-slate-900 mb-1">Cocok Untuk Semua Kalangan</h3>
+                        <p className="text-sm text-slate-600 font-medium leading-relaxed">Akses layanan medis yang ramah untuk anak-anak, remaja, hingga dewasa.</p>
+                     </div>
+                  </div>
+
+                </div>
               </div>
 
-              <div className="space-y-6 relative">
-                <div className="absolute left-6 top-8 bottom-8 w-1 bg-gradient-to-b from-teal-200 to-transparent rounded-full"></div>
+            </div>
+          </div>
+        </section>
 
-                {[
-                  { step: "01", title: "Unduh Aplikasi", desc: "Tersedia gratis di App Store dan Google Play. Daftar dalam 1 menit." },
-                  { step: "02", title: "Cari Layanan Medis", desc: "Temukan spesialis, paket check-up, atau layanan home care favorit Anda." },
-                  { step: "03", title: "Pilih Jadwal", desc: "Tentukan waktu yang pas, tanpa perlu menyesuaikan waktu Anda dengan antrean klinik." },
-                  { step: "04", title: "Lakukan Konsultasi", desc: "Hadir langsung ke klinik tanpa antre, atau lakukan telemedis dari rumah." },
-                  { step: "05", title: "Tebus Obat Otomatis", desc: "Resep akan langsung diproses dan diantar oleh kurir instan kami." },
-                ].map((item, idx) => (
-                  <div key={idx} className="relative flex items-start gap-8 group pb-2">
-                    <div className="relative z-10 w-14 h-14 bg-white border-4 border-[#FAFAFC] shadow-lg rounded-2xl flex items-center justify-center flex-shrink-0 text-xl font-extrabold text-teal-600 group-hover:bg-gradient-to-br group-hover:from-teal-500 group-hover:to-teal-600 group-hover:text-white group-hover:border-transparent transition-all duration-300 transform group-hover:scale-110">
-                      {item.step}
-                    </div>
-                    <div className="pt-2 bg-white/0 p-4 rounded-2xl group-hover:bg-white group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-all duration-300 -ml-4 pl-4 w-full border border-transparent group-hover:border-slate-100">
-                      <h3 className="text-xl font-extrabold text-slate-900 mb-1">{item.title}</h3>
-                      <p className="text-slate-500 font-medium">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+        {/* Fitur Utama */}
+        <section id="fitur" className="py-28 bg-[#FAFAFC] relative overflow-hidden">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#04989F]/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+          <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-[#D66604]/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[#04989F] shadow-sm font-bold text-sm mb-6 border border-slate-100">
+                 <Globe2 size={16} /> Platform Terintegrasi
+              </div>
+              <h2 className="text-3xl lg:text-5xl font-extrabold text-slate-900 tracking-tight">Fitur <span className="text-[#04989F]">Utama</span></h2>
+              <p className="mt-6 text-slate-600 text-lg max-w-2xl mx-auto font-medium">Nikmati kemudahan layanan kesehatan digital yang dirancang khusus untuk kenyamanan dan kepraktisan Anda.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+              {/* Feature 1 - Highlighted */}
+              <div className="relative group rounded-[40px] p-10 overflow-hidden shadow-2xl bg-gradient-to-br from-[#04989F] to-[#037d83] hover:-translate-y-2 transition-all duration-300">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                <div className="relative z-10 flex flex-col h-full">
+                   <div className="w-20 h-20 rounded-3xl bg-white/20 flex items-center justify-center mb-8 backdrop-blur-md border border-white/20 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                      <FileText size={36} className="text-white" />
+                   </div>
+                   <h3 className="text-2xl font-bold text-white mb-4">Rekam Medis Digital</h3>
+                   <p className="text-white/90 font-medium leading-relaxed flex-grow text-lg">
+                     Riwayat kesehatan Anda tersimpan dengan aman, rapi, dan mudah diakses kapan saja untuk kebutuhan kontrol berikutnya.
+                   </p>
+                </div>
+              </div>
+
+              {/* Feature 2 - Standard Light Card */}
+              <div className="relative group rounded-[40px] p-10 overflow-hidden shadow-xl shadow-slate-200/50 bg-white border border-slate-100 hover:border-[#04989F]/30 hover:-translate-y-2 transition-all duration-300">
+                <div className="relative z-10 flex flex-col h-full">
+                   <div className="w-20 h-20 rounded-3xl bg-[#04989F]/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 group-hover:bg-[#04989F] group-hover:shadow-lg">
+                      <CalendarCheck size={36} className="text-[#04989F] group-hover:text-white transition-colors" />
+                   </div>
+                   <h3 className="text-2xl font-bold text-slate-900 mb-4">Antrian Real-time</h3>
+                   <p className="text-slate-600 font-medium leading-relaxed flex-grow text-lg">
+                     Pantau nomor antrian secara langsung dari smartphone Anda tanpa harus menunggu lama dan bosan di ruang tunggu klinik.
+                   </p>
+                </div>
+              </div>
+
+              {/* Feature 3 - Standard Light Card */}
+              <div className="relative group rounded-[40px] p-10 overflow-hidden shadow-xl shadow-slate-200/50 bg-white border border-slate-100 hover:border-[#D66604]/30 hover:-translate-y-2 transition-all duration-300">
+                <div className="relative z-10 flex flex-col h-full">
+                   <div className="w-20 h-20 rounded-3xl bg-[#D66604]/10 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300 group-hover:bg-[#D66604] group-hover:shadow-lg">
+                      <Bell size={36} className="text-[#D66604] group-hover:text-white transition-colors" />
+                   </div>
+                   <h3 className="text-2xl font-bold text-slate-900 mb-4">Pengingat Obat</h3>
+                   <p className="text-slate-600 font-medium leading-relaxed flex-grow text-lg">
+                     Fitur alarm otomatis yang terintegrasi untuk memastikan Anda tidak pernah melewatkan jadwal minum obat tepat waktu.
+                   </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Pre-Footer CTA */}
-      <section className="py-20 relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-         <div className="w-full bg-slate-900 rounded-[40px] p-12 lg:p-20 relative overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-900 to-slate-900 opacity-90"></div>
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/20 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3"></div>
+        {/* Cara Kerja / Onboarding - Simplification */}
+        <section className="py-24 bg-white relative overflow-hidden border-y border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-               <div className="text-center lg:text-left max-w-2xl">
-                  <h2 className="text-3xl lg:text-5xl font-extrabold text-white mb-4">Siap untuk Pengalaman Baru?</h2>
-                  <p className="text-slate-300 text-lg font-medium">Jadilah bagian dari revolusi kesehatan. Unduh aplikasinya sekarang dan dapatkan diskon 20% untuk konsultasi pertama.</p>
-               </div>
-               <div className="flex-shrink-0">
-                  <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 hover:scale-105 active:scale-95 px-10 h-16 rounded-full font-extrabold text-lg transition-all shadow-[0_10px_20px_rgba(255,255,255,0.2)]">
-                     Unduh Sekarang
-                  </Button>
-               </div>
-            </div>
-         </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="tentang" className="bg-[#0b1324] text-white pt-24 pb-12 mt-auto border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-16">
-
-            {/* Lokasi / Map */}
-            <div className="lg:col-span-5 space-y-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center p-2 shadow-lg shadow-teal-500/20">
-                   <HeartPulse className="w-full h-full text-white" />
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              
+              <div className="w-full lg:w-1/2 z-20">
+                <div className="mb-10">
+                  <h3 className="text-[#04989F] font-bold uppercase text-sm tracking-wider mb-2">Panduan Pengguna</h3>
+                  <h2 className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Langkah Mudah Menuju Kesehatan Optimal</h2>
+                  <p className="text-slate-600 font-medium text-lg">Hanya butuh beberapa langkah sederhana untuk mulai menikmati fasilitas kesehatan yang terintegrasi dan modern.</p>
                 </div>
-                <span className="font-extrabold text-3xl tracking-tight">Sehati Medika</span>
+
+                <div className="space-y-8">
+                  {[
+                    { step: "1", title: "Unduh Aplikasi", desc: "Tersedia gratis di App Store dan Google Play. Daftar dalam 1 menit." },
+                    { step: "2", title: "Cari Layanan Medis", desc: "Temukan spesialis, paket check-up, atau layanan home care favorit Anda." },
+                    { step: "3", title: "Pilih Jadwal", desc: "Tentukan waktu yang pas, tanpa perlu menyesuaikan waktu dengan antrean." },
+                    { step: "4", title: "Lakukan Konsultasi", desc: "Hadir ke klinik tanpa antre, atau lakukan telemedis dari rumah." }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-6">
+                      <div className="w-12 h-12 rounded-2xl bg-[#04989F]/10 flex items-center justify-center flex-shrink-0 text-xl font-bold text-[#04989F]">
+                        {item.step}
+                      </div>
+                      <div className="pt-1 w-full">
+                        <h3 className="text-xl font-bold text-slate-900 mb-1">{item.title}</h3>
+                        <p className="text-slate-600 font-medium">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-slate-400 text-lg font-medium leading-relaxed">
-                Menjadi standar emas layanan purna-waktu untuk klinik kesehatan dengan pendekatan holistik.
+
+              <div className="w-full lg:w-1/2 flex justify-center relative">
+                 <div className="w-full max-w-md bg-slate-50 border border-slate-100 p-8 rounded-[40px] shadow-lg">
+                    <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm mb-6">
+                       <div className="flex justify-between items-center mb-6">
+                          <h4 className="font-bold text-slate-900">Jadwal Anda</h4>
+                          <CalendarCheck className="text-[#04989F]" size={20} />
+                       </div>
+                       <div className="bg-[#04989F]/10 p-4 rounded-xl border border-[#04989F]/20 mb-4">
+                          <p className="text-sm font-bold text-[#04989F] mb-1">Hari ini, 09:00 WIB</p>
+                          <p className="font-bold text-slate-900">Poli Umum</p>
+                          <p className="text-sm text-slate-600">dr. Anita Lestari</p>
+                       </div>
+                       <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                          <p className="text-sm font-bold text-slate-500 mb-1">Besok, 13:00 WIB</p>
+                          <p className="font-bold text-slate-900">Pemeriksaan Rutin</p>
+                          <p className="text-sm text-slate-600">Klinik Sehati</p>
+                       </div>
+                    </div>
+                    <div className="bg-[#04989F] p-6 rounded-3xl text-white shadow-md">
+                       <div className="flex items-center gap-4 mb-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                             <Bell size={24} className="text-white" />
+                          </div>
+                          <div>
+                             <h4 className="font-bold">Pengingat Obat</h4>
+                             <p className="text-white/80 text-sm">Paracetamol - Setelah Makan</p>
+                          </div>
+                       </div>
+                       <Button className="w-full bg-white text-[#04989F] hover:bg-slate-50 rounded-xl font-bold">
+                          Sudah Diminum
+                       </Button>
+                    </div>
+                 </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* Pre-Footer CTA */}
+        <section className="py-20 bg-[#FAFAFC]">
+           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="w-full bg-[#04989F] rounded-[40px] p-12 lg:p-16 text-center shadow-xl relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px]"></div>
+                 <div className="relative z-10">
+                    <h2 className="text-3xl lg:text-4xl font-extrabold text-white mb-6">Unduh Aplikasi Mobile Kami</h2>
+                    <p className="text-white/90 text-lg font-medium mb-10 max-w-2xl mx-auto">
+                      Dapatkan kemudahan layanan kesehatan dalam satu genggaman. Gunakan fitur pengingat obat khusus untuk Anda, pantau nomor antrian secara langsung, dan akses riwayat periksa kapan saja.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                       <Button size="lg" className="bg-slate-900 hover:bg-slate-800 text-white px-8 h-14 rounded-xl font-bold text-lg shadow-lg border-0 transition-all hover:-translate-y-1 flex items-center gap-3">
+                          <Smartphone size={24} /> Google Play
+                       </Button>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </section>
+
+        {/* Footer */}
+        <footer id="kontak" className="bg-slate-900 text-white pt-24 pb-12 mt-auto border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-16">
+
+              {/* Lokasi / Map */}
+              <div className="lg:col-span-5 space-y-8">
+                <div className="flex items-center gap-3 mb-6 bg-white/5 w-fit p-2 pr-4 rounded-2xl border border-white/10">
+                  <img src="/logo.png" alt="Sehati Medika" className="h-10 w-auto object-contain bg-white rounded-xl p-1" />
+                  <span className="font-extrabold text-2xl tracking-tight">Sehati Medika</span>
+                </div>
+                <p className="text-slate-400 text-lg font-medium leading-relaxed">
+                  Menjadi standar emas layanan medis dengan pendekatan profesional, ramah, dan terpercaya untuk seluruh kalangan masyarakat.
+                </p>
+
+                {/* Map Iframe */}
+                <div className="w-full h-64 bg-slate-800 rounded-2xl overflow-hidden mt-6 relative border border-slate-700 shadow-lg">
+                  <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3949.3364966601614!2d113.7143160758414!3d-8.16880058161556!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd695b617d8f623%3A0x6b7713f019deaf0!2sJl.%20Danau%20Toba%20No.31%2C%20Lingkungan%20Panji%2C%20Tegalgede%2C%20Kec.%20Sumbersari%2C%20Kabupaten%20Jember%2C%20Jawa%20Timur%2068124!5e0!3m2!1sen!2sid!4v1714704812345!5m2!1sen!2sid" 
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }} 
+                    allowFullScreen={false} 
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+                <a href="https://share.google/JmGyZPTr2YqkZI9Hi" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#04989F] font-bold hover:text-white transition-colors">
+                  <MapPin size={20} /> Buka Peta di Google Maps
+                </a>
+              </div>
+
+              {/* Menu Navigasi */}
+              <div className="lg:col-span-3 space-y-6">
+                <h4 className="text-xl font-bold text-white mb-6">Eksplorasi</h4>
+                <ul className="space-y-4">
+                  {['Beranda', 'Tentang Kami', 'Fitur Utama'].map(item => (
+                     <li key={item}>
+                       <a href={`#${item.toLowerCase().replace(' ', '')}`} className="text-slate-400 font-medium hover:text-[#04989F] hover:translate-x-2 transition-all inline-flex items-center gap-2">
+                          <ChevronRight size={16} />
+                          {item}
+                       </a>
+                     </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Kontak */}
+              <div className="lg:col-span-4 space-y-6">
+                <h4 className="text-xl font-bold text-white mb-6">Hubungi Kami</h4>
+                <ul className="space-y-6">
+                  <li className="flex items-start gap-4 group">
+                    <div className="mt-1 bg-slate-800 p-3 rounded-xl border border-slate-700"><MapPin size={20} className="text-[#04989F]" /></div>
+                    <span className="text-slate-400 font-medium leading-relaxed">Jl. Danau Toba No.31, Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124</span>
+                  </li>
+                  <li className="flex items-center gap-4 group">
+                    <div className="bg-slate-800 p-3 rounded-xl border border-slate-700"><Phone size={20} className="text-[#04989F]" /></div>
+                    <span className="text-slate-400 font-medium leading-relaxed">0822-1013-0822 <br/><span className="text-sm text-slate-500">(Layanan WhatsApp)</span></span>
+                  </li>
+                  <li className="flex items-center gap-4 group">
+                    <div className="bg-slate-800 p-3 rounded-xl border border-slate-700"><Mail size={20} className="text-[#04989F]" /></div>
+                    <span className="text-slate-400 font-medium leading-relaxed">halo@sehatimedika.id</span>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Copyright Section */}
+            <div className="pt-8 border-t border-slate-800 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-slate-500 font-medium text-sm">
+                © {new Date().getFullYear()} Sehati Medika. Hak Cipta Dilindungi.
               </p>
-
-              <div className="w-full h-48 bg-slate-800 rounded-2xl overflow-hidden mt-6 relative shadow-inner border border-slate-700/50 group">
-                <img
-                  src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Map Location"
-                  className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500 grayscale group-hover:grayscale-0"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-transparent">
-                  <div className="bg-white/10 backdrop-blur-md text-white p-4 rounded-2xl shadow-2xl border border-white/20 transform group-hover:scale-110 transition-transform duration-300">
-                    <MapPin size={28} className="text-teal-400" />
-                  </div>
-                </div>
+              <div className="flex gap-6 text-sm font-medium">
+                <a href="#" className="text-slate-500 hover:text-white transition-colors">Informasi Privasi</a>
+                <a href="#" className="text-slate-500 hover:text-white transition-colors">Syarat & Ketentuan</a>
               </div>
             </div>
 
-            {/* Menu Navigasi */}
-            <div className="lg:col-span-3 space-y-6">
-              <h4 className="text-xl font-bold border-l-4 border-orange-500 pl-3 mb-6 text-white">Eksplorasi</h4>
-              <ul className="space-y-4">
-                {['Beranda', 'Kategori Layanan', 'Fitur Aplikasi', 'Riwayat Dokter', 'Karir (Hiring)'].map(item => (
-                   <li key={item}>
-                     <a href="#" className="text-slate-400 font-medium hover:text-teal-400 hover:translate-x-2 transition-all inline-flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-500 opacity-0 transition-opacity"></span>
-                        {item}
-                     </a>
-                   </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Kontak */}
-            <div className="lg:col-span-4 space-y-6">
-              <h4 className="text-xl font-bold border-l-4 border-teal-500 pl-3 mb-6 text-white">Hubungi Kami</h4>
-              <ul className="space-y-6">
-                <li className="flex items-start gap-4 group">
-                  <div className="mt-1 bg-slate-800 p-3 rounded-xl border border-slate-700 group-hover:bg-teal-500/10 transition-colors"><MapPin size={22} className="text-teal-400" /></div>
-                  <span className="text-slate-400 font-medium leading-relaxed group-hover:text-slate-200 transition-colors">Jl. Sehat Bersama No. 123, Kebayoran Baru, Jakarta Selatan 12110</span>
-                </li>
-                <li className="flex items-center gap-4 group">
-                  <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 group-hover:bg-teal-500/10 transition-colors"><Phone size={22} className="text-teal-400" /></div>
-                  <span className="text-slate-400 font-medium leading-relaxed group-hover:text-slate-200 transition-colors">+62 811 2233 4455 <br/><span className="text-sm text-slate-500">(Layanan WhatsApp 24/7)</span></span>
-                </li>
-                <li className="flex items-center gap-4 group">
-                  <div className="bg-slate-800 p-3 rounded-xl border border-slate-700 group-hover:bg-teal-500/10 transition-colors"><Mail size={22} className="text-teal-400" /></div>
-                  <span className="text-slate-400 font-medium leading-relaxed group-hover:text-slate-200 transition-colors">halo@sehatimedika.id</span>
-                </li>
-              </ul>
-            </div>
-
           </div>
-
-          {/* Copyright Section */}
-          <div className="pt-8 border-t border-slate-800 text-center flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 font-medium text-sm">
-              © {new Date().getFullYear()} Sehati Medika. Hak Cipta Dilindungi.
-            </p>
-            <div className="flex gap-6 text-sm font-medium">
-              <a href="#" className="text-slate-500 hover:text-white transition-colors">Informasi Privasi</a>
-              <a href="#" className="text-slate-500 hover:text-white transition-colors">Syarat & Ketentuan</a>
-            </div>
-          </div>
-
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   );
 }
 

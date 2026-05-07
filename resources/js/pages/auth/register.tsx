@@ -1,28 +1,18 @@
+import { Head, useForm, Link } from '@inertiajs/react';
+import { Mail, Lock, User, Phone, ArrowLeft, ShieldCheck, Stethoscope, FileText, Briefcase, Eye, EyeOff } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
 import InputError from '@/components/input-error';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, FileText, HeartPulse, Lock, Mail, Phone, ShieldCheck, Stethoscope, User } from 'lucide-react';
-import { FormEventHandler } from 'react';
-
-interface RegisterForm {
-    name: string;
-    email: string;
-    password: string;
-    password_confirmation: string;
-    // Tambahan atribut dokter
-    keahlian: string;
-    no_str: string;
-    no_telp: string;
-}
 
 export default function Register() {
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
-        keahlian: '',
-        no_str: '',
-        no_telp: '',
+        role: 'Dokter',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -33,307 +23,198 @@ export default function Register() {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#FAFAFC] font-sans selection:bg-teal-200 selection:text-teal-900">
-            <Head title="Register Dokter" />
-
-            {/* Left Column: Image Presentation */}
-            <div className="relative hidden overflow-hidden bg-slate-900 lg:block lg:w-1/2">
+        <>
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+            `}</style>
+            <div style={{ fontFamily: "'Inter', sans-serif" }} className="min-h-screen relative flex items-center justify-center bg-slate-900 selection:bg-[#04989F]/30 selection:text-[#04989F] font-sans py-12 px-4 sm:px-6 overflow-x-hidden overflow-y-auto">
+                <Head title="Register Akun" />
+                
                 {/* Background Ornaments */}
-                <div className="absolute inset-0 z-10 bg-gradient-to-br from-slate-900 to-teal-900 opacity-90"></div>
-                <div className="absolute right-0 bottom-0 z-20 h-[800px] w-[800px] translate-x-1/3 translate-y-1/3 rounded-full bg-teal-500/20 blur-[120px]"></div>
-                <div className="absolute top-0 left-0 z-20 h-[600px] w-[600px] -translate-x-1/3 -translate-y-1/3 rounded-full bg-emerald-500/20 blur-[100px]"></div>
+                <div className="fixed inset-0 bg-gradient-to-br from-slate-900 to-[#04989F]/80 z-10 opacity-90"></div>
+                <div className="fixed bottom-0 right-0 w-[800px] h-[800px] bg-[#04989F]/20 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 z-20"></div>
+                <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-[#D66604]/20 rounded-full blur-[100px] -translate-x-1/3 -translate-y-1/3 z-20"></div>
 
                 <img
-                    className="absolute inset-0 z-0 h-full w-full object-cover opacity-50 mix-blend-overlay"
+                    className="fixed inset-0 h-full w-full object-cover mix-blend-overlay opacity-50 z-0"
                     src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"
                     alt="Modern clinic registration"
                 />
 
-                {/* Floating Glass Component on top of Image */}
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center px-12">
-                    <div className="w-full max-w-lg rounded-[32px] border border-white/20 bg-white/10 p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-xl">
-                        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-white shadow-lg shadow-teal-500/30">
-                            <ShieldCheck size={32} />
-                        </div>
-                        <h2 className="mb-4 text-3xl leading-tight font-extrabold text-white">Mulai Perjalanan Medis Anda.</h2>
-                        <p className="mb-8 text-lg leading-relaxed font-medium text-slate-300">
-                            Bergabunglah bersama ribuan dokter spesialis lainnya. Kelola antrian, rekam medis, dan layanan klinik secara real-time dan
-                            terintegrasi.
-                        </p>
-
-                        <div className="flex flex-col gap-4">
-                            {['Manajemen pasien real-time', 'Dashboard analitik & laporan lengkap', 'Sistem notifikasi pintar & alarm IGD'].map(
-                                (benefit, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 text-slate-200">
-                                        <div className="flex h-6 w-6 items-center justify-center rounded-full border border-teal-500/50 bg-teal-500/30 text-teal-400">
-                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </div>
-                                        <span className="text-sm font-semibold">{benefit}</span>
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Column: Form Section */}
-            <div className="relative z-10 flex w-full flex-col items-center justify-center overflow-y-auto px-6 py-12 lg:w-1/2 lg:px-16 xl:px-24">
-                <div className="absolute top-8 right-8 z-50 flex w-full max-w-[480px] items-center justify-end gap-3 lg:right-16">
-                    <Link
-                        href="/"
-                        className="group flex cursor-pointer items-center gap-2 font-medium text-slate-500 transition-colors hover:text-teal-600"
-                    >
-                        <div className="transition-transform group-hover:-translate-x-1">
-                            <ArrowLeft size={18} />
-                        </div>
-                        <span>Kembali ke Beranda</span>
-                    </Link>
-                </div>
-
-                <div className="mt-12 w-full max-w-[480px] space-y-6 pb-8 lg:mt-0">
-                    <div className="text-center lg:text-left">
-                        <div className="mb-6 inline-flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-500/20">
-                                <HeartPulse className="h-7 w-7 text-white" />
+                {/* Form Section */}
+                <div className="relative z-30 w-full max-w-[380px] bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-5 sm:p-6 border border-slate-100">
+                    <div className="absolute top-6 right-8 flex items-center justify-end z-50">
+                        <Link href="/" className="flex items-center gap-1.5 group cursor-pointer text-slate-400 hover:text-[#04989F] transition-colors text-xs font-bold uppercase tracking-wider">
+                            <div className="group-hover:-translate-x-1 transition-transform">
+                                <ArrowLeft size={14} />
                             </div>
-                            <span className="bg-gradient-to-r from-teal-700 to-teal-900 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
-                                Sehati Medika
-                            </span>
-                        </div>
-                        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-slate-900">Buat Akun Dokter ✨</h1>
-                        <p className="font-medium tracking-wide text-slate-500">Lengkapi data profesional Anda untuk platform ini.</p>
+                            <span>Kembali</span>
+                        </Link>
                     </div>
 
-                    <form className="space-y-5" onSubmit={submit}>
-                        {/* Nama Lengkap */}
-                        <div className="group relative">
-                            <label className="mb-2 block text-sm font-bold text-slate-700">Nama Lengkap (beserta gelar)</label>
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                    <User size={20} />
-                                </div>
-                                <input
-                                    name="name"
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    required
-                                    autoFocus
-                                    tabIndex={1}
-                                    autoComplete="name"
-                                    disabled={processing}
-                                    className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-                                    placeholder="dr. Budi Santoso, Sp.A"
-                                />
+                    <div className="w-full space-y-3">
+                        <div className="text-center sm:text-left mt-1">
+                            <div className="inline-flex items-center gap-2 mb-2">
+                                <img src="/logo.png" alt="Sehati Medika" className="h-6 w-auto object-contain" />
+                                <span className="font-extrabold text-base tracking-tight text-slate-900">Sehati Medika</span>
                             </div>
-                            <InputError message={errors.name} className="mt-1" />
+                            <h1 className="text-lg font-extrabold text-slate-900 mb-0.5 tracking-tight">Buat Akun Baru ✨</h1>
+                            <p className="text-slate-500 text-xs font-medium tracking-wide">Pilih peran Anda dan lengkapi data pendaftaran.</p>
                         </div>
 
-                        {/* Keahlian & No STR */}
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <form className="space-y-2.5" onSubmit={submit}>
+                            
+                            {/* Nama Lengkap */}
                             <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">Spesialisasi</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Nama Lengkap</label>
                                 <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <Stethoscope size={20} />
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#04989F] transition-colors">
+                                        <User size={16} />
                                     </div>
-                                    <select
-                                        name="keahlian"
-                                        value={data.keahlian}
-                                        onChange={(e) => setData('keahlian', e.target.value)}
+                                    <input 
+                                        type="text" 
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
                                         required
-                                        tabIndex={2}
                                         disabled={processing}
-                                        className="block w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-10 pl-11 font-medium text-slate-800 transition-all outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-                                    >
-                                        <option value="" disabled>
-                                            Pilih spesialisasi...
-                                        </option>
-                                        <option value="Umum">Dokter Umum</option>
-                                        <option value="Khitan">Layanan Khitan</option>
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400">
-                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <InputError message={errors.keahlian} className="mt-1" />
-                            </div>
-
-                            <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">No. STR</label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <FileText size={20} />
-                                    </div>
-                                    <input
-                                        name="no_str"
-                                        type="text"
-                                        value={data.no_str}
-                                        onChange={(e) => setData('no_str', e.target.value)}
-                                        required
-                                        tabIndex={3}
-                                        autoComplete="off"
-                                        disabled={processing}
-                                        className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-                                        placeholder="No STR Aktif"
+                                        className="block w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-[#04989F]/10 focus:border-[#04989F] focus:bg-white transition-all text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none" 
+                                        placeholder="Nama lengkap"
                                     />
                                 </div>
-                                <InputError message={errors.no_str} className="mt-1" />
+                                <InputError message={errors.name} className="mt-1 text-xs" />
                             </div>
-                        </div>
 
-                        {/* Email & No Telp */}
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            {/* Peran / Role */}
                             <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">Email</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Pilih Peran</label>
                                 <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <Mail size={20} />
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#04989F] transition-colors z-10">
+                                        <Briefcase size={16} />
                                     </div>
-                                    <input
-                                        name="email"
+                                    <select
+                                        value={data.role}
+                                        onChange={(e) => setData('role', e.target.value)}
+                                        required
+                                        disabled={processing}
+                                        className="block w-full pl-9 pr-10 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-[#04989F]/10 focus:border-[#04989F] focus:bg-white transition-all text-xs font-medium text-slate-800 outline-none appearance-none cursor-pointer"
+                                    >
+                                        <option value="Dokter">Dokter</option>
+                                        <option value="Admin">Admin</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Email */}
+                            <div className="group relative">
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Email</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#04989F] transition-colors">
+                                        <Mail size={16} />
+                                    </div>
+                                    <input 
                                         type="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
                                         required
-                                        tabIndex={4}
-                                        autoComplete="email"
                                         disabled={processing}
-                                        className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
+                                        className="block w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-[#04989F]/10 focus:border-[#04989F] focus:bg-white transition-all text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none" 
                                         placeholder="mail@klinik.com"
                                     />
                                 </div>
-                                <InputError message={errors.email} className="mt-1" />
+                                <InputError message={errors.email} className="mt-1 text-xs" />
                             </div>
 
+                            {/* Passwords */}
                             <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">No. Telp / WA</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Password</label>
                                 <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <Phone size={20} />
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#04989F] transition-colors">
+                                        <Lock size={16} />
                                     </div>
-                                    <input
-                                        name="no_telp"
-                                        type="tel"
-                                        value={data.no_telp}
-                                        onChange={(e) => setData('no_telp', e.target.value)}
-                                        required
-                                        tabIndex={5}
-                                        autoComplete="tel"
-                                        disabled={processing}
-                                        className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
-                                        placeholder="0812345678"
-                                    />
-                                </div>
-                                <InputError message={errors.no_telp} className="mt-1" />
-                            </div>
-                        </div>
-
-                        {/* Passwords */}
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                            <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">Password</label>
-                                <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <Lock size={20} />
-                                    </div>
-                                    <input
-                                        name="password"
-                                        type="password"
+                                    <input 
+                                        type={showPassword ? "text" : "password"}
                                         value={data.password}
                                         onChange={(e) => setData('password', e.target.value)}
                                         required
-                                        tabIndex={6}
-                                        autoComplete="new-password"
                                         disabled={processing}
-                                        className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
+                                        className="block w-full pl-9 pr-10 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-[#04989F]/10 focus:border-[#04989F] focus:bg-white transition-all text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none" 
                                         placeholder="Minimal 8 karakter"
                                     />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    >
+                                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
                                 </div>
-                                <InputError message={errors.password} className="mt-1" />
+                                <InputError message={errors.password} className="mt-1 text-xs" />
                             </div>
 
                             <div className="group relative">
-                                <label className="mb-2 block text-sm font-bold text-slate-700">Konfirmasi Password</label>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5">Konfirmasi Password</label>
                                 <div className="relative">
-                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
-                                        <Lock size={20} />
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#04989F] transition-colors">
+                                        <Lock size={16} />
                                     </div>
-                                    <input
-                                        name="password_confirmation"
-                                        type="password"
+                                    <input 
+                                        type={showConfirmPassword ? "text" : "password"}
                                         value={data.password_confirmation}
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
                                         required
-                                        tabIndex={7}
-                                        autoComplete="new-password"
                                         disabled={processing}
-                                        className="block w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-11 font-medium text-slate-800 transition-all outline-none placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10"
+                                        className="block w-full pl-9 pr-10 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-[#04989F]/10 focus:border-[#04989F] focus:bg-white transition-all text-xs font-medium text-slate-800 placeholder:text-slate-400 outline-none" 
                                         placeholder="Ulangi password"
                                     />
-                                </div>
-                                <InputError message={errors.password_confirmation} className="mt-1" />
-                            </div>
-                        </div>
-
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="flex w-full transform items-center justify-center gap-2 rounded-xl border border-transparent bg-gradient-to-r from-teal-600 to-teal-500 px-4 py-4 text-lg font-bold text-white shadow-[0_8px_20px_rgb(15,118,110,0.25)] transition-all outline-none hover:-translate-y-0.5 hover:from-teal-500 hover:to-teal-400 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                                {processing ? (
-                                    <svg
-                                        className="h-5 w-5 animate-spin text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
                                     >
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path
-                                            className="opacity-75"
-                                            fill="currentColor"
-                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                    </svg>
-                                ) : (
-                                    'Daftar sebagai Dokter'
-                                )}
-                            </button>
-                        </div>
+                                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                <InputError message={errors.password_confirmation} className="mt-1 text-xs" />
+                            </div>
 
-                        <p className="mt-2 text-center text-sm font-medium text-slate-500">
-                            Dengan mendaftar, Anda menyetujui{' '}
-                            <a href="#" className="font-bold text-teal-600 hover:text-teal-500">
-                                Syarat Ketentuan
-                            </a>{' '}
-                            dan{' '}
-                            <a href="#" className="font-bold text-teal-600 hover:text-teal-500">
-                                Kebijakan Privasi
-                            </a>{' '}
-                            kami.
-                        </p>
+                            <div className="pt-2">
+                                <button 
+                                    type="submit" 
+                                    disabled={processing}
+                                    className="w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-xl shadow-lg shadow-[#04989F]/30 text-[13px] font-bold text-white bg-[#04989F] hover:bg-[#037d83] transform hover:-translate-y-0.5 transition-all outline-none disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {processing ? (
+                                        <svg className="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : 'Daftar Sekarang'}
+                                </button>
+                            </div>
+                            
+                            <p className="text-center text-xs font-medium text-slate-500 mt-2">
+                                Dengan mendaftar, Anda menyetujui{' '}
+                                <a href="#" className="font-bold text-[#04989F] hover:text-[#037d83]">Syarat Ketentuan</a> dan{' '}
+                                <a href="#" className="font-bold text-[#04989F] hover:text-[#037d83]">Kebijakan Privasi</a>.
+                            </p>
 
-                        <div className="relative flex items-center py-4">
-                            <div className="flex-grow border-t border-slate-200"></div>
-                            <span className="mx-4 flex-shrink-0 text-sm font-bold tracking-wider text-slate-400 uppercase">Atau</span>
-                            <div className="flex-grow border-t border-slate-200"></div>
-                        </div>
-
-                        <p className="text-center text-base font-semibold text-slate-600">
-                            Sudah memiliki akun?{' '}
-                            <Link href="/login" className="font-extrabold text-orange-500 transition-colors hover:text-orange-600">
-                                Masuk di sini
-                            </Link>
-                        </p>
-                    </form>
+                            <div className="relative py-2.5 flex items-center">
+                                <div className="flex-grow border-t border-slate-200"></div>
+                                <span className="flex-shrink-0 mx-4 text-slate-400 text-[10px] font-bold uppercase tracking-wider">Atau</span>
+                                <div className="flex-grow border-t border-slate-200"></div>
+                            </div>
+                            
+                            <p className="text-center text-xs font-semibold text-slate-600">
+                                Sudah memiliki akun?{' '}
+                                <Link href="/login" className="font-extrabold text-[#D66604] hover:text-[#b55503] transition-colors">Masuk di sini</Link>
+                            </p>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }
