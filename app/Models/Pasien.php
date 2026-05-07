@@ -27,5 +27,8 @@ class Pasien extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-
+    public function antrians()
+    {
+        return $this->hasMany(Antrian::class);
+    }
 }

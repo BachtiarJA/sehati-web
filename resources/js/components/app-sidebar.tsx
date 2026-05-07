@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react'; // Tambahkan usePage
-import { FileText, LayoutGrid, ListOrdered, Pill, Stethoscope, UserPlus } from 'lucide-react'; // Tambahkan icon baru
+import { FileText, FolderOpen, LayoutGrid, ListOrdered, Pill, Stethoscope, UserPlus } from 'lucide-react'; // Tambahkan icon baru
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -33,6 +33,11 @@ export function AppSidebar() {
             title: 'Resep Obat',
             url: '/resep-obat',
             icon: Pill,
+        },
+        {
+            title: 'Rekam Medis',
+            url: '/rekam-medis',
+            icon: FolderOpen,
         },
     ];
 

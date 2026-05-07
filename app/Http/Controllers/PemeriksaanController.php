@@ -25,6 +25,8 @@ class PemeriksaanController extends Controller
                 return [
                     'id' => $p->id,
                     'nama_pasien' => $p->antrian->pasien->nama ?? 'Unknown',
+                    'tinggi_badan' => $p->tinggi_badan, // <-- TAMBAHKAN INI
+                    'berat_badan' => $p->berat_badan,
                     'keluhan' => $p->keluhan,
                     'diagnosa' => $p->diagnosa,
                     'tindakan' => $p->tindakan,
@@ -57,6 +59,8 @@ class PemeriksaanController extends Controller
     {
         $request->validate([
             'antrian_id' => 'required',
+            'tinggi_badan' => 'required|numeric', // <-- TAMBAHKAN INI
+            'berat_badan' => 'required|numeric',
             'keluhan' => 'required',
             'diagnosa' => 'required',
             'tindakan' => 'required',
@@ -74,13 +78,15 @@ class PemeriksaanController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'tinggi_badan' => 'required|numeric', // <-- TAMBAHKAN INI
+            'berat_badan' => 'required|numeric',
             'keluhan' => 'required',
             'diagnosa' => 'required',
             'tindakan' => 'required',
         ]);
 
         $pemeriksaan = Pemeriksaan::findOrFail($id);
-        $pemeriksaan->update($request->only(['keluhan', 'diagnosa', 'tindakan']));
+        $pemeriksaan->update($request->only(['tinggi_badan', 'berat_badan', 'keluhan', 'diagnosa', 'tindakan']));
 
         return redirect()->back();
     }
