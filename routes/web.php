@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\KelolaDokterController;
 use App\Http\Controllers\Admin\PendaftaranController;
 use App\Http\Controllers\RekamMedisController;
+use App\Http\Controllers\ResepObatController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -49,9 +50,8 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
 
 
 
-    Route::get('/resep-obat', function () {
-        return Inertia::render('obat');
-    })->name('obat');
+    Route::get('/resep-obat', [ResepObatController::class, 'index'])->name('resep-obat.index');
+    Route::post('/resep-obat', [ResepObatController::class, 'store'])->name('resep-obat.store');
 });
 
 require __DIR__ . '/settings.php';
