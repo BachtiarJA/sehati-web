@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
-import { MoreHorizontal, Plus, Search, Stethoscope } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Pencil, Plus, Search, Stethoscope, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 // Interface disesuaikan dengan struktur tabel `dokter` dan relasi `users`
@@ -17,7 +17,6 @@ interface Dokter {
     keahlian: string; // 'Umum' atau 'Khitan'
     no_str: string;
     no_telp: string;
-    // Email diambil dari relasi tabel users
     email?: string;
 }
 
@@ -27,9 +26,10 @@ interface Props {
 
 export default function DaftarDokter({ dokters = [] }: Props) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Filter pencarian berdasarkan nama, keahlian, atau No. STR
+    // Filter pencarian
     const filteredDokters = dokters.filter(
         (dokter) =>
             dokter.nama_dokter.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,19 +37,20 @@ export default function DaftarDokter({ dokters = [] }: Props) {
             dokter.no_str.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    // Setup Form Inertia sesuai kolom database
+    // ==========================================
+    // FORM 1: TAMBAH DOKTER
+    // ==========================================
     const { data, setData, post, processing, reset, errors } = useForm({
         nama_dokter: '',
-        email: '', // Untuk tabel users
-        password: '', // Untuk tabel users
-        keahlian: 'Umum', // Enum: 'Umum', 'Khitan'
+        email: '',
+        password: '',
+        keahlian: 'Umum',
         no_str: '',
         no_telp: '',
     });
 
-    const submit = (e: React.FormEvent) => {
+    const submitCreate = (e: React.FormEvent) => {
         e.preventDefault();
-
         post('/admin/dokter', {
             onSuccess: () => {
                 setIsDialogOpen(false);
@@ -57,6 +58,51 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                 alert('Data Dokter berhasil ditambahkan!');
             },
         });
+    };
+
+    // ==========================================
+    // FORM 2: EDIT DOKTER
+    // ==========================================
+    const editForm = useForm({
+        id: 0,
+        nama_dokter: '',
+        keahlian: '',
+        no_str: '',
+        no_telp: '',
+    });
+
+    const openEditDialog = (dokter: Dokter) => {
+        editForm.setData({
+            id: dokter.id,
+            nama_dokter: dokter.nama_dokter,
+            keahlian: dokter.keahlian,
+            no_str: dokter.no_str,
+            no_telp: dokter.no_telp,
+        });
+        setIsEditDialogOpen(true);
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Mengirim request PUT ke /admin/dokter/{id}
+        editForm.put(`/admin/dokter/${editForm.data.id}`, {
+            onSuccess: () => {
+                setIsEditDialogOpen(false);
+                editForm.reset();
+                alert('Data Dokter berhasil diperbarui!');
+            },
+        });
+    };
+
+    // ==========================================
+    // FUNGSI 3: HAPUS DOKTER
+    // ==========================================
+    const deleteDokter = (id: number) => {
+        if (confirm('Apakah Anda yakin ingin menghapus data dokter ini? (Akun login dokter juga akan terhapus)')) {
+            router.delete(`/admin/dokter/${id}`, {
+                onSuccess: () => alert('Data Dokter berhasil dihapus!'),
+            });
+        }
     };
 
     return (
@@ -70,6 +116,7 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                         <p className="text-muted-foreground mt-1 text-sm">Kelola profil, STR, dan akun login dokter klinik.</p>
                     </div>
 
+                    {/* TOMBOL TAMBAH DOKTER */}
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="bg-teal-600 text-white shadow-sm hover:bg-teal-700">
@@ -78,13 +125,13 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[550px]">
-                            <form onSubmit={submit}>
+                            <form onSubmit={submitCreate}>
                                 <DialogHeader>
                                     <DialogTitle>Tambah Data Dokter</DialogTitle>
                                     <DialogDescription>Buat profil dokter beserta akun login sistemnya.</DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-5 py-4">
-                                    {/* DATA LOGIN */}
+                                    {/* Data Login */}
                                     <div className="space-y-4 rounded-lg border border-slate-100 bg-slate-50 p-4">
                                         <h4 className="text-xs font-bold tracking-wider text-slate-500 uppercase">Akun Login Sistem</h4>
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -121,7 +168,7 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                         </div>
                                     </div>
 
-                                    {/* DATA PROFIL DOKTER */}
+                                    {/* Data Profil */}
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-bold tracking-wider text-slate-500 uppercase">Profil Medis Dokter</h4>
                                         <div className="grid grid-cols-4 items-center gap-4">
@@ -139,7 +186,6 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                                 {errors.nama_dokter && <span className="text-xs text-rose-500">{errors.nama_dokter}</span>}
                                             </div>
                                         </div>
-
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="keahlian" className="text-right text-xs">
                                                 Keahlian
@@ -154,10 +200,8 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                                         <SelectItem value="Khitan">Khitan</SelectItem>
                                                     </SelectContent>
                                                 </Select>
-                                                {errors.keahlian && <span className="text-xs text-rose-500">{errors.keahlian}</span>}
                                             </div>
                                         </div>
-
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="no_str" className="text-right text-xs">
                                                 No. STR
@@ -170,13 +214,11 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                                     placeholder="Nomor Surat Tanda Registrasi"
                                                     required
                                                 />
-                                                {errors.no_str && <span className="text-xs text-rose-500">{errors.no_str}</span>}
                                             </div>
                                         </div>
-
                                         <div className="grid grid-cols-4 items-center gap-4">
                                             <Label htmlFor="no_telp" className="text-right text-xs">
-                                                No. Telepon
+                                                No. Telp
                                             </Label>
                                             <div className="col-span-3">
                                                 <Input
@@ -186,12 +228,11 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                                     placeholder="0812xxxx"
                                                     required
                                                 />
-                                                {errors.no_telp && <span className="text-xs text-rose-500">{errors.no_telp}</span>}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <DialogFooter className="mt-4">
+                                <DialogFooter>
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -203,7 +244,7 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                         Batal
                                     </Button>
                                     <Button type="submit" disabled={processing} className="bg-teal-600 text-white hover:bg-teal-700">
-                                        {processing ? 'Menyimpan...' : 'Simpan Data Dokter'}
+                                        {processing ? 'Menyimpan...' : 'Simpan Data'}
                                     </Button>
                                 </DialogFooter>
                             </form>
@@ -222,7 +263,7 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                 <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
                                 <Input
                                     type="search"
-                                    placeholder="Cari nama, keahlian, STR..."
+                                    placeholder="Cari nama, keahlian..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="bg-slate-50 pl-8"
@@ -259,25 +300,38 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
-                                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                                                            dokter.keahlian === 'Khitan'
-                                                                ? 'bg-blue-100 text-blue-700'
-                                                                : 'bg-emerald-100 text-emerald-700'
-                                                        }`}
+                                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${dokter.keahlian === 'Khitan' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}
                                                     >
                                                         {dokter.keahlian}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 font-medium text-slate-600">{dokter.no_str}</td>
                                                 <td className="px-6 py-4 text-slate-600">{dokter.no_telp}</td>
+
+                                                {/* ===================================== */}
+                                                {/* KOLOM AKSI (EDIT & DELETE ICON) */}
+                                                {/* ===================================== */}
                                                 <td className="px-6 py-4 text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-slate-400 hover:bg-teal-50 hover:text-teal-600"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => openEditDialog(dokter)}
+                                                            className="h-8 w-8 text-amber-500 hover:bg-amber-50 hover:text-amber-600"
+                                                            title="Edit Dokter"
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => deleteDokter(dokter.id)}
+                                                            className="h-8 w-8 text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                                                            title="Hapus Dokter"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -293,6 +347,83 @@ export default function DaftarDokter({ dokters = [] }: Props) {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* ========================================== */}
+                {/* DIALOG FORM EDIT DOKTER */}
+                {/* ========================================== */}
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent className="sm:max-w-[500px]">
+                        <form onSubmit={submitEdit}>
+                            <DialogHeader>
+                                <DialogTitle>Edit Data Dokter</DialogTitle>
+                                <DialogDescription>Ubah profil dan informasi kontak dokter.</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-5 py-4">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit_nama" className="text-right text-xs">
+                                        Nama Lengkap
+                                    </Label>
+                                    <div className="col-span-3">
+                                        <Input
+                                            id="edit_nama"
+                                            value={editForm.data.nama_dokter}
+                                            onChange={(e) => editForm.setData('nama_dokter', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label className="text-right text-xs">Keahlian</Label>
+                                    <div className="col-span-3">
+                                        <Select value={editForm.data.keahlian} onValueChange={(val) => editForm.setData('keahlian', val)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Pilih Keahlian" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="Umum">Umum</SelectItem>
+                                                <SelectItem value="Khitan">Khitan</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit_str" className="text-right text-xs">
+                                        No. STR
+                                    </Label>
+                                    <div className="col-span-3">
+                                        <Input
+                                            id="edit_str"
+                                            value={editForm.data.no_str}
+                                            onChange={(e) => editForm.setData('no_str', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="edit_telp" className="text-right text-xs">
+                                        No. Telp
+                                    </Label>
+                                    <div className="col-span-3">
+                                        <Input
+                                            id="edit_telp"
+                                            value={editForm.data.no_telp}
+                                            onChange={(e) => editForm.setData('no_telp', e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                                    Batal
+                                </Button>
+                                <Button type="submit" disabled={editForm.processing} className="bg-amber-500 text-white hover:bg-amber-600">
+                                    {editForm.processing ? 'Menyimpan...' : 'Perbarui Data'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

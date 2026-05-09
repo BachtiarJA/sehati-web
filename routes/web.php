@@ -24,7 +24,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Kelola Dokter (Tambah, Edit, Hapus)
     Route::get('/dokter', [KelolaDokterController::class, 'index'])->name('dokter.index');
     Route::post('/dokter', [KelolaDokterController::class, 'store'])->name('dokter.store');
-
+    Route::put('/dokter/{id}', [KelolaDokterController::class, 'update'])->name('dokter.update');
+    Route::delete('/dokter/{id}', [KelolaDokterController::class, 'destroy'])->name('dokter.destroy');
     // Pendaftaran Pasien Langsung & Antrian
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
     Route::post('/pendaftaran/akun-baru', [PendaftaranController::class, 'buatAkunPasien'])->name('pendaftaran.akun_baru');

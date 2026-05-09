@@ -70,4 +70,44 @@ class KelolaDokterController extends Controller
 
         return redirect()->back();
     }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nama_dokter' => 'required|string|max:255',
+            'keahlian' => 'required|in:Umum,Khitan',
+            'no_str' => 'required|string',
+            'no_telp' => 'required|string',
+        ]);
+
+        $dokter = Dokter::findOrFail($id);
+        $dokter->update([
+            'nama_dokter' => $request->nama_dokter,
+            'keahlian' => $request->keahlian,
+            'no_str' => $request->no_str,
+            'no_telp' => $request->no_telp,
+        ]);
+
+        // Update juga nama di tabel User
+        $dokter->user()->update([
+            'name' => $request->nama_dokter
+        ]);
+
+        return redirect()->back();
+    }
+
+    // Method untuk Proses Hapus (DELETE /admin/dokter/{id})
+    public function destroy($id)
+    {
+        $dokter = Dokter::findOrFail($id);
+
+        // Hapus akun login (tabel User) secara otomatis akan menghapus data dokter
+        // jika menggunakan relasi onDelete('cascade') di database Anda.
+        // Jika tidak, hapus satu per satu:
+        $userId = $dokter->user_id;
+        $dokter->delete();
+        User::find($userId)?->delete();
+
+        return redirect()->back();
+    }
 }
