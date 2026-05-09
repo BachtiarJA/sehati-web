@@ -22,11 +22,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Kelola Dokter (Tambah, Edit, Hapus)
-    Route::resource('dokter', KelolaDokterController::class);
+    Route::get('/dokter', [KelolaDokterController::class, 'index'])->name('dokter.index');
+    Route::post('/dokter', [KelolaDokterController::class, 'store'])->name('dokter.store');
 
     // Pendaftaran Pasien Langsung & Antrian
     Route::get('/pendaftaran', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
     Route::post('/pendaftaran/akun-baru', [PendaftaranController::class, 'buatAkunPasien'])->name('pendaftaran.akun_baru');
+
     Route::post('/pendaftaran/antrian', [PendaftaranController::class, 'tambahAntrian'])->name('pendaftaran.antrian');
     Route::get('/daftar-obat', [ObatController::class, 'index'])->name('daftar-obat.index');
     Route::post('/daftar-obat', [ObatController::class, 'store'])->name('daftar-obat.store');
