@@ -35,11 +35,7 @@ class BookingController extends Controller
                 ? Carbon::parse($request->tgl_kunjungan)->toDateString()
                 : Carbon::today()->toDateString();
 
-            // =====================================================================
-            // BLOK KODE PENGECEKAN (SUDAH DAFTAR) DIHAPUS/DINONAKTIFKAN DI SINI
-            // =====================================================================
-
-            // 3. Hitung no_antrian terakhir di hari tersebut
+            // 3. Hitung no_antrian terakhir (ANGKA MURNI)
             $antrianTerakhir = Antrian::where('dokter_id', $request->dokter_id)
                 ->whereDate('tgl_kunjungan', $tanggal)
                 ->max('no_antrian');
@@ -51,7 +47,7 @@ class BookingController extends Controller
                 'pasien_id' => $pasien->id,
                 'dokter_id' => $request->dokter_id,
                 'tgl_kunjungan' => $tanggal,
-                'no_antrian' => $nomorBaru,
+                'no_antrian' => $nomorBaru, // <--- Berupa Angka (Integer)
                 'status' => 'menunggu',
             ]);
 
