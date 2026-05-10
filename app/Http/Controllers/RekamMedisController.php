@@ -12,8 +12,8 @@ class RekamMedisController extends Controller
 {
     public function index()
     {
-        // Ambil semua data pasien beserta riwayat antrian dan pemeriksaannya
-        $pasiens = Pasien::with(['antrians.pemeriksaan', 'antrians.dokter'])
+        // Ambil semua data pasien beserta riwayat antrian, pemeriksaan, DOKTER, dan JADWAL OBAT
+        $pasiens = Pasien::with(['antrians.pemeriksaan.jadwalMinumObats', 'antrians.dokter'])
             ->get()
             ->map(function ($pasien) {
 
@@ -33,16 +33,24 @@ class RekamMedisController extends Controller
                         'tindakan' => $antrian->pemeriksaan->tindakan,
                         'tb' => $antrian->pemeriksaan->tinggi_badan,
                         'bb' => $antrian->pemeriksaan->berat_badan,
+                        'nama_dokter' => $antrian->dokter->nama_dokter ?? 'Tidak Diketahui',
 
-                        // NAMA DOKTER HARUSNYA DI SINI (Di dalam map riwayat)
-                        'nama_dokter' => $antrian->dokter->nama_dokter ?? 'Tidak Diketahui'
+                        // --- TAMBAHAN BARU: DATA JADWAL OBAT (MILESTONE) ---
+                        'jadwal_obat' => $antrian->pemeriksaan->jadwalMinumObats->map(function ($jadwal) {
+                            return [
+                                'id' => $jadwal->id,
+                                'waktu_jadwal' => $jadwal->waktu_jadwal->format('Y-m-d H:i:s'),
+                                'waktu_aktual' => $jadwal->waktu_aktual ? $jadwal->waktu_aktual->format('H:i') : null,
+                                'status' => $jadwal->status,
+                            ];
+                        })->values()
                     ];
                 })->values();
 
-                // KEMBALIKAN DATA PASIEN (Pastikan 'nama' ada di sini!)
+                // KEMBALIKAN DATA PASIEN
                 return [
                     'id' => $pasien->id,
-                    'nama' => $pasien->nama, // <--- KEMBALIKAN BARIS INI YANG SEMPAT TERHAPUS
+                    'nama' => $pasien->nama,
                     'no_rm' => 'RM-' . str_pad($pasien->id, 4, '0', STR_PAD_LEFT),
                     'total_kunjungan' => $riwayat->count(),
                     'terakhir_periksa' => $riwayat->first()['tanggal'] ?? 'Belum ada riwayat',
@@ -54,6 +62,7 @@ class RekamMedisController extends Controller
             'pasiens' => $pasiens
         ]);
     }
+
     public function exportWord($id)
     {
         // 1. Ambil data pasien beserta riwayatnya

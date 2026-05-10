@@ -1,7 +1,29 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { Activity, Calendar, ChevronRight, Download, FileText, History, Search, User, UserCircle } from 'lucide-react';
+import {
+    Activity,
+    Calendar,
+    CheckCircle2,
+    ChevronRight,
+    Clock,
+    Download,
+    FileText,
+    History,
+    Pill,
+    Search,
+    User,
+    UserCircle,
+    XCircle,
+} from 'lucide-react';
 import { useState } from 'react';
+
+// --- TAMBAHAN INTERFACE BARU ---
+interface JadwalObat {
+    id: number;
+    waktu_jadwal: string;
+    waktu_aktual: string | null;
+    status: 'belum' | 'sudah' | 'terlewat';
+}
 
 interface Riwayat {
     id_pemeriksaan: number;
@@ -12,6 +34,7 @@ interface Riwayat {
     tb: number | null;
     bb: number | null;
     nama_dokter: string;
+    jadwal_obat?: JadwalObat[]; // <-- Array jadwal obat dimasukkan ke sini
 }
 
 interface Pasien {
@@ -36,13 +59,26 @@ export default function RekamMedis({ pasiens = [] }: Props) {
         (p) => p.nama.toLowerCase().includes(searchTerm.toLowerCase()) || p.no_rm.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
+    // Fungsi kecil untuk memformat tanggal jadwal (Contoh: "10 Mei 08:00")
+    const formatWaktuJadwal = (dateString: string) => {
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return dateString; // Fallback jika format salah
+        const hari = String(d.getDate()).padStart(2, '0');
+        const bulan = d.toLocaleString('id-ID', { month: 'short' });
+        const jam = String(d.getHours()).padStart(2, '0');
+        const menit = String(d.getMinutes()).padStart(2, '0');
+        return `${hari} ${bulan} • ${jam}:${menit}`;
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Rekam Medis', href: '/rekam-medis' }]}>
             <Head title="Rekam Medis Pasien" />
 
             <div className="mx-auto flex h-[calc(100vh-4rem)] w-full max-w-7xl flex-col p-4 md:p-6 lg:p-8">
                 <div className="flex h-full flex-col gap-6 md:flex-row">
+                    {/* ========================================= */}
                     {/* PANEL KIRI: DAFTAR PASIEN */}
+                    {/* ========================================= */}
                     <div className="flex h-full w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:w-1/3">
                         <div className="border-b border-slate-100 bg-slate-50/50 p-4">
                             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-slate-800">
@@ -103,7 +139,9 @@ export default function RekamMedis({ pasiens = [] }: Props) {
                         </div>
                     </div>
 
+                    {/* ========================================= */}
                     {/* PANEL KANAN: DETAIL REKAM MEDIS & TIMELINE */}
+                    {/* ========================================= */}
                     <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:w-2/3">
                         {selectedPasien ? (
                             <>
@@ -127,7 +165,6 @@ export default function RekamMedis({ pasiens = [] }: Props) {
                                         </div>
                                     </div>
 
-                                    {/* TOMBOL EXPORT WORD DITAMBAHKAN DI SINI */}
                                     <a
                                         href={`/rekam-medis/${selectedPasien.id}/export-word`}
                                         className="flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-teal-700 hover:shadow-md focus:ring-4 focus:ring-teal-500/20 focus:outline-none sm:shrink-0"
@@ -143,7 +180,7 @@ export default function RekamMedis({ pasiens = [] }: Props) {
 
                                     {selectedPasien.riwayat.length > 0 ? (
                                         <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent md:before:mx-auto md:before:translate-x-0">
-                                            {selectedPasien.riwayat.map((riwayat, index) => (
+                                            {selectedPasien.riwayat.map((riwayat) => (
                                                 <div
                                                     key={riwayat.id_pemeriksaan}
                                                     className="group is-active relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse"
@@ -195,6 +232,57 @@ export default function RekamMedis({ pasiens = [] }: Props) {
                                                                 <p className="mb-1 text-xs font-bold text-emerald-500 uppercase">Tindakan / Resep</p>
                                                                 <p className="text-sm font-medium text-emerald-700">{riwayat.tindakan}</p>
                                                             </div>
+
+                                                            {/* ========================================= */}
+                                                            {/* MILESTONE PANTAUAN MINUM OBAT */}
+                                                            {/* ========================================= */}
+                                                            {riwayat.jadwal_obat && riwayat.jadwal_obat.length > 0 && (
+                                                                <div className="mt-4 rounded-xl border border-blue-100/60 bg-blue-50/30 p-3">
+                                                                    <div className="mb-3 flex items-center justify-between">
+                                                                        <p className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 uppercase">
+                                                                            <Pill size={14} /> Pantauan Obat
+                                                                        </p>
+                                                                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                                                            {riwayat.jadwal_obat.filter((j) => j.status === 'sudah').length} /{' '}
+                                                                            {riwayat.jadwal_obat.length} Selesai
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Milestone Badges */}
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {riwayat.jadwal_obat.map((jadwal) => {
+                                                                            // Set warna dan icon berdasarkan status
+                                                                            let bgColor = 'bg-slate-50 border-slate-200 text-slate-400';
+                                                                            let Icon = Clock;
+
+                                                                            if (jadwal.status === 'sudah') {
+                                                                                bgColor = 'bg-emerald-50 border-emerald-200 text-emerald-600';
+                                                                                Icon = CheckCircle2;
+                                                                            } else if (jadwal.status === 'terlewat') {
+                                                                                bgColor = 'bg-rose-50 border-rose-200 text-rose-500';
+                                                                                Icon = XCircle;
+                                                                            }
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={jadwal.id}
+                                                                                    title={
+                                                                                        jadwal.status === 'sudah'
+                                                                                            ? `Diminum jam ${jadwal.waktu_aktual}`
+                                                                                            : `Status: ${jadwal.status}`
+                                                                                    }
+                                                                                    className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 transition-all hover:shadow-sm ${bgColor}`}
+                                                                                >
+                                                                                    <Icon size={12} />
+                                                                                    <span className="text-[10px] font-bold">
+                                                                                        {formatWaktuJadwal(jadwal.waktu_jadwal)}
+                                                                                    </span>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
