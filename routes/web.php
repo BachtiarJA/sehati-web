@@ -49,6 +49,7 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
     Route::get('/diagnosis', [PemeriksaanController::class, 'index'])->name('diagnosis');
     Route::post('/diagnosis', [PemeriksaanController::class, 'store'])->name('diagnosis.store');
     Route::put('/diagnosis/{id}', [PemeriksaanController::class, 'update'])->name('diagnosis.update');
+    Route::get('/surat-sakit/{id}', [PemeriksaanController::class, 'exportWord'])->name('surat-sakit.export');
     Route::delete('/diagnosis/{id}', [PemeriksaanController::class, 'destroy'])->name('diagnosis.destroy');
 
 

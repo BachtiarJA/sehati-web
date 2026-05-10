@@ -1,14 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Calendar, Download, Edit2, Plus, Save, Search, Trash2, User, X } from 'lucide-react';
+import { Calendar, Download, Edit2, FileText, Plus, Save, Search, Trash2, User, X } from 'lucide-react';
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 
 interface PemeriksaanData {
     id: number;
     nama_pasien: string;
-    tinggi_badan: string | number; // BARU
-    berat_badan: string | number; // BARU
+    tinggi_badan: string | number;
+    berat_badan: string | number;
     keluhan: string;
     diagnosa: string;
     tindakan: string;
@@ -35,7 +35,7 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [editId, setEditId] = useState<number | null>(null);
 
-    // 1. TAMBAHKAN tinggi_badan & berat_badan di useForm
+    // Form Pemeriksaan
     const { data, setData, post, put, reset, processing } = useForm({
         antrian_id: '',
         tinggi_badan: '',
@@ -45,6 +45,15 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
         tindakan: '',
     });
 
+    // Form Surat Sakit
+    const [isSuratDialogOpen, setIsSuratDialogOpen] = useState(false);
+    const [selectedPemeriksaanId, setSelectedPemeriksaanId] = useState<number | null>(null);
+    const formSurat = useForm({
+        lama_istirahat: 3,
+        tanggal_mulai: new Date().toISOString().split('T')[0],
+    });
+
+    // --- Modal Handlers ---
     const openAddModal = () => {
         setModalMode('add');
         reset();
@@ -54,7 +63,6 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
     const openEditModal = (item: PemeriksaanData) => {
         setModalMode('edit');
         setEditId(item.id);
-        // 2. SET DATA SAAT TOMBOL EDIT DIKLIK
         setData({
             antrian_id: '',
             tinggi_badan: item.tinggi_badan?.toString() || '',
@@ -71,6 +79,12 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
         reset();
     };
 
+    const openSuratDialog = (id: number) => {
+        setSelectedPemeriksaanId(id);
+        setIsSuratDialogOpen(true);
+    };
+
+    // --- Action Handlers ---
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (modalMode === 'add') {
@@ -86,7 +100,17 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
         }
     };
 
-    // (Kode Filtering Data tetap sama)
+    const downloadSuratSakit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedPemeriksaanId) return;
+
+        // Buka URL download di tab baru dengan parameter yang dikirim via Query String
+        const url = `/surat-sakit/${selectedPemeriksaanId}?lama_istirahat=${formSurat.data.lama_istirahat}&tanggal_mulai=${formSurat.data.tanggal_mulai}`;
+        window.open(url, '_blank');
+        setIsSuratDialogOpen(false);
+    };
+
+    // --- Filters & Exports ---
     const filteredData = pemeriksaans.filter((p) => {
         const matchSearch =
             p.nama_pasien.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -226,7 +250,6 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
                                                 <span className="text-sm font-bold text-slate-700">{item.nama_pasien}</span>
                                             </div>
                                         </td>
-                                        {/* KOLOM TB & BB */}
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex flex-col text-sm font-medium text-slate-600">
                                                 <span>{item.tinggi_badan} cm</span>
@@ -237,16 +260,26 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
                                         <td className="px-6 py-4 text-sm text-slate-600">{item.diagnosa}</td>
                                         <td className="px-6 py-4 text-sm text-slate-600">{item.tindakan}</td>
                                         <td className="px-6 py-4 text-center whitespace-nowrap">
+                                            {/* ===== PERUBAHAN TOMBOL AKSI ===== */}
                                             <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => openSuratDialog(item.id)}
+                                                    className="rounded-lg border border-purple-200/50 bg-purple-50 p-1.5 text-purple-600 transition-colors hover:bg-purple-100"
+                                                    title="Cetak Surat Sakit"
+                                                >
+                                                    <FileText size={16} />
+                                                </button>
                                                 <button
                                                     onClick={() => openEditModal(item)}
                                                     className="rounded-lg border border-blue-200/50 bg-blue-50 p-1.5 text-blue-600 transition-colors hover:bg-blue-100"
+                                                    title="Edit Pemeriksaan"
                                                 >
                                                     <Edit2 size={16} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(item.id)}
                                                     className="rounded-lg border border-rose-200/50 bg-rose-50 p-1.5 text-rose-600 transition-colors hover:bg-rose-100"
+                                                    title="Hapus Pemeriksaan"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
@@ -260,7 +293,7 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
                 </div>
             </div>
 
-            {/* Modal Form */}
+            {/* Modal Form Pemeriksaan */}
             {isModalOpen && (
                 <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm duration-200">
                     <div className="animate-in zoom-in-95 w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl duration-200">
@@ -297,7 +330,6 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
                                 </div>
                             )}
 
-                            {/* 3. INPUTAN TINGGI DAN BERAT BADAN (DIBUAT BERDAMPINGAN) */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-medium text-slate-700">Tinggi Badan</label>
@@ -378,6 +410,56 @@ export default function Diagnosis({ pemeriksaans = [], antrianAktif = [] }: Prop
                                 >
                                     <Save size={16} />
                                     {processing ? 'Menyimpan...' : 'Simpan Data'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Dialog Form Surat Sakit */}
+            {isSuratDialogOpen && (
+                <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm duration-200">
+                    <div className="animate-in zoom-in-95 w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-xl duration-200">
+                        <div className="border-b border-slate-100 px-6 py-4">
+                            <h3 className="text-lg font-bold text-slate-800">Cetak Surat Sakit</h3>
+                        </div>
+                        <form onSubmit={downloadSuratSakit} className="space-y-4 p-6">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-slate-700">Lama Istirahat (Hari)</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    value={formSurat.data.lama_istirahat}
+                                    onChange={(e) => formSurat.setData('lama_istirahat', parseInt(e.target.value))}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 focus:outline-none"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-slate-700">Mulai Tanggal</label>
+                                <input
+                                    type="date"
+                                    required
+                                    value={formSurat.data.tanggal_mulai}
+                                    onChange={(e) => formSurat.setData('tanggal_mulai', e.target.value)}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 focus:outline-none"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsSuratDialogOpen(false)}
+                                    className="rounded-xl bg-slate-50 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-purple-700"
+                                >
+                                    <FileText size={16} /> Download .docx
                                 </button>
                             </div>
                         </form>

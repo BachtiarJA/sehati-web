@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Antrian;
 use App\Models\Pemeriksaan;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 
 class PemeriksaanController extends Controller
 {
@@ -89,6 +92,64 @@ class PemeriksaanController extends Controller
         $pemeriksaan->update($request->only(['tinggi_badan', 'berat_badan', 'keluhan', 'diagnosa', 'tindakan']));
 
         return redirect()->back();
+    }
+
+    public function exportWord(Request $request, $id)
+    {
+        // 1. Ambil Data Pasien dan Pemeriksaan
+        $pemeriksaan = Pemeriksaan::with(['antrian.pasien', 'antrian.dokter'])->findOrFail($id);
+        $pasien = $pemeriksaan->antrian->pasien;
+        $dokter = $pemeriksaan->antrian->dokter;
+
+        $lamaIstirahat = $request->query('lama_istirahat', 3);
+        $tglMulai = Carbon::parse($request->query('tanggal_mulai', now()));
+        $tglSelesai = $tglMulai->copy()->addDays($lamaIstirahat - 1);
+
+        // 2. Inisiasi PhpWord
+        $phpWord = new PhpWord();
+        $section = $phpWord->addSection();
+
+        // 3. Desain KOP Surat (Bisa disesuaikan text/ukurannya)
+        $section->addText('KLINIK SEHATI MEDIKA', ['bold' => true, 'size' => 16], ['alignment' => 'center']);
+        $section->addText('Jl. Danau Toba No.31, Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124', ['size' => 10], ['alignment' => 'center']);
+        $section->addText('Telp: 0822-1013-0822', ['size' => 10], ['alignment' => 'center']);
+        $section->addText('====================================================', [], ['alignment' => 'center']);
+        $section->addTextBreak(1);
+
+        // 4. Judul Surat
+        $section->addText('SURAT KETERANGAN SAKIT', ['bold' => true, 'size' => 14, 'underline' => 'single'], ['alignment' => 'center']);
+        $section->addTextBreak(1);
+
+        // 5. Isi Surat
+        $section->addText('Yang bertanda tangan di bawah ini menerangkan bahwa:', ['size' => 12]);
+
+        $section->addText('Nama               : ' . $pasien->nama, ['size' => 12]);
+        $section->addText('Umur               : ' . $pasien->umur . ' Tahun', ['size' => 12]);
+        $section->addText('Jenis Kelamin      : ' . $pasien->jenis_kelamin, ['size' => 12]);
+        $section->addText('Alamat             : ' . $pasien->alamat, ['size' => 12]);
+        $section->addTextBreak(1);
+
+        $isi = "Pasien tersebut di atas berdasarkan hasil pemeriksaan didiagnosa mengalami {$pemeriksaan->diagnosa}, sehingga memerlukan istirahat selama {$lamaIstirahat} hari, terhitung mulai tanggal " . $tglMulai->translatedFormat('d F Y') . " sampai dengan " . $tglSelesai->translatedFormat('d F Y') . ".";
+
+        $section->addText($isi, ['size' => 12]);
+        $section->addText('Demikian surat keterangan ini diberikan untuk diketahui dan dapat dipergunakan sebagaimana mestinya.', ['size' => 12]);
+        $section->addTextBreak(2);
+
+        // 6. Tanda Tangan
+        $section->addText('Dikeluarkan pada tanggal: ' . now()->translatedFormat('d F Y'), ['size' => 12], ['alignment' => 'right']);
+        $section->addText('Dokter Pemeriksa,', ['size' => 12], ['alignment' => 'right']);
+        $section->addTextBreak(3);
+        $section->addText($dokter->nama_dokter, ['bold' => true, 'size' => 12, 'underline' => 'single'], ['alignment' => 'right']);
+        $section->addText('SIP: ' . $dokter->no_str, ['size' => 10], ['alignment' => 'right']);
+
+        // 7. Simpan sementara & Download
+        $fileName = 'Surat_Sakit_' . str_replace(' ', '_', $pasien->nama) . '.docx';
+        $tempFile = storage_path('app/public/' . $fileName);
+
+        $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($tempFile);
+
+        return response()->download($tempFile)->deleteFileAfterSend(true);
     }
 
     // Fungsi Hapus Data
