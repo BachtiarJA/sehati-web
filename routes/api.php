@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\JadwalObatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -28,5 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
             'pasien' => $request->user()->pasien
         ]);
     });
+
+    Route::get('/mobile/jadwal-obat', [JadwalObatController::class, 'hariIni']);
+
+    
+    Route::post('/mobile/minum-obat/{id_jadwal}', [JadwalObatController::class, 'tandaiSudahMinum']);
 
 });
