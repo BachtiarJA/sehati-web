@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JadwalDokterController;
 use App\Http\Controllers\ObatController;
 use App\Http\Controllers\PemeriksaanController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -52,7 +53,8 @@ Route::middleware(['auth', 'role:dokter'])->group(function () {
     Route::get('/surat-sakit/{id}', [PemeriksaanController::class, 'exportWord'])->name('surat-sakit.export');
     Route::delete('/diagnosis/{id}', [PemeriksaanController::class, 'destroy'])->name('diagnosis.destroy');
 
-
+    Route::get('/jadwal-praktek', [JadwalDokterController::class, 'index'])->name('jadwal.index');
+    Route::post('/jadwal-praktek', [JadwalDokterController::class, 'store'])->name('jadwal.store');
 
     Route::get('/resep-obat', [ResepObatController::class, 'index'])->name('resep-obat.index');
     Route::post('/resep-obat', [ResepObatController::class, 'store'])->name('resep-obat.store');
