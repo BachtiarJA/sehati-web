@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
-import { CheckCircle2, ClipboardList, Search, User, UserPlus } from 'lucide-react';
+import { Activity, CalendarDays, CheckCircle2, ClipboardList, Clock, Filter, Search, User, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 
-// Interfaces disesuaikan dengan Database
+// Interfaces
 interface Pasien {
     id: number;
     user_id: number;
@@ -18,7 +18,7 @@ interface Pasien {
     umur: number;
     alamat: string;
     email?: string;
-    antrean_hari_ini?: string | null; // <--- TAMBAHAN BARU
+    antrean_hari_ini?: string | null;
 }
 
 interface Dokter {
@@ -27,23 +27,45 @@ interface Dokter {
     keahlian: string;
 }
 
+interface Antrean {
+    id: number;
+    dokter_id: number; // <--- [BARU] Ditambahkan untuk filter
+    nama_pasien: string;
+    nama_dokter: string;
+    poli: string;
+    jam_kunjungan: string;
+    status: string;
+}
+
 interface Props {
     pasiens?: Pasien[];
     dokters?: Dokter[];
+    antreans?: Antrean[];
 }
 
-export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props) {
+export default function PendaftaranPasien({ pasiens = [], dokters = [], antreans = [] }: Props) {
     const [isPasienDialogOpen, setIsPasienDialogOpen] = useState(false);
     const [isAntreanDialogOpen, setIsAntreanDialogOpen] = useState(false);
     const [selectedPasien, setSelectedPasien] = useState<Pasien | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Filter pencarian pasien
+    // [BARU] State untuk menyimpan ID dokter yang dipilih di filter
+    const [filterDokterId, setFilterDokterId] = useState<string>('semua');
+
+    // Filter pencarian nama pasien
     const filteredPasiens = pasiens.filter(
         (p) => p.nama.toLowerCase().includes(searchTerm.toLowerCase()) || p.alamat.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
-    // Form 1: Pembuatan Akun & Profil Pasien Baru
+    // [BARU] Logika filter tabel Antrean berdasarkan Dropdown Dokter
+    const filteredAntreans = antreans.filter((antrean) => {
+        if (filterDokterId === 'semua') return true;
+        return antrean.dokter_id.toString() === filterDokterId;
+    });
+
+    const daftarPoli = Array.from(new Set(dokters.map((d) => d.keahlian)));
+
+    // Form Pasien Baru
     const formPasien = useForm({
         nama: '',
         email: '',
@@ -53,14 +75,15 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
         alamat: '',
     });
 
-    // Form 2: Pendaftaran Antrean
+    // Form Pendaftaran Antrean
     const formAntrean = useForm({
         pasien_id: '',
         poli: '',
         dokter_id: '',
+        tgl_kunjungan: new Date().toISOString().split('T')[0],
+        jam_kunjungan: '',
     });
 
-    // Handle Submit Pasien Baru
     const submitPasien = (e: React.FormEvent) => {
         e.preventDefault();
         formPasien.post('/admin/pendaftaran/akun-baru', {
@@ -72,14 +95,18 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
         });
     };
 
-    // Handle Buka Dialog Antrean
     const openAntreanDialog = (pasien: Pasien) => {
         setSelectedPasien(pasien);
-        formAntrean.setData('pasien_id', pasien.id.toString());
+        formAntrean.clearErrors();
+        formAntrean.setData({
+            ...formAntrean.data,
+            pasien_id: pasien.id.toString(),
+            tgl_kunjungan: new Date().toISOString().split('T')[0],
+            jam_kunjungan: '',
+        });
         setIsAntreanDialogOpen(true);
     };
 
-    // Handle Submit Antrean
     const submitAntrean = (e: React.FormEvent) => {
         e.preventDefault();
         formAntrean.post('/admin/pendaftaran/antrian', {
@@ -87,7 +114,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                 setIsAntreanDialogOpen(false);
                 formAntrean.reset();
                 setSelectedPasien(null);
-                alert('Pasien berhasil dimasukkan ke antrean!');
+                alert('Pasien berhasil di-booking ke jadwal tersebut!');
             },
         });
     };
@@ -101,15 +128,16 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                 <div className="flex flex-col items-center gap-6 rounded-2xl border border-teal-100 bg-gradient-to-r from-teal-50 to-white p-8 text-center shadow-sm sm:flex-row sm:p-10 sm:text-left">
                     <div className="rounded-full bg-white p-4 text-6xl shadow-sm">🏥</div>
                     <div>
-                        <h1 className="mb-2 text-3xl font-extrabold text-teal-800">Pendaftaran & Antrean Pasien</h1>
+                        <h1 className="mb-2 text-3xl font-extrabold text-teal-800">Pendaftaran & Booking Sesi</h1>
                         <p className="text-sm font-medium text-slate-500">
-                            Cari pasien yang sudah terdaftar untuk dimasukkan ke antrean, atau buat akun pasien baru jika belum pernah berobat.
+                            Cari pasien dan pilih slot waktu pemeriksaan, atau buat akun pasien baru.
                         </p>
                     </div>
                 </div>
 
                 {/* ===== CARD TABEL PASIEN ===== */}
                 <Card className="border-slate-200 shadow-sm">
+                    {/* ... (Kode Header Card Pasien Tetap Sama) ... */}
                     <CardHeader className="border-b pb-4">
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
@@ -138,11 +166,10 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                             </div>
                         </div>
                     </CardHeader>
-
                     <CardContent className="p-0">
-                        <div className="overflow-x-auto">
+                        <div className="max-h-[400px] overflow-x-auto overflow-y-auto">
                             <table className="w-full text-left text-sm">
-                                <thead className="border-b border-slate-100 bg-slate-50 text-xs tracking-wider text-slate-500 uppercase">
+                                <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50 text-xs tracking-wider text-slate-500 uppercase shadow-sm">
                                     <tr>
                                         <th className="px-6 py-4 font-bold">Nama / Email Pasien</th>
                                         <th className="px-6 py-4 text-center font-bold">L/P</th>
@@ -157,7 +184,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                             <tr key={pasien.id} className="transition-colors hover:bg-slate-50/50">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
                                                             <User size={18} />
                                                         </div>
                                                         <div>
@@ -177,13 +204,11 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                                 <td className="max-w-[200px] truncate px-6 py-4 text-slate-600" title={pasien.alamat}>
                                                     {pasien.alamat}
                                                 </td>
-
-                                                {/* KONDISI PERUBAHAN TOMBOL ADA DI SINI */}
                                                 <td className="px-6 py-4 text-right">
                                                     {pasien.antrean_hari_ini ? (
                                                         <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
                                                             <CheckCircle2 size={14} className="text-emerald-500" />
-                                                            Antrean: {pasien.antrean_hari_ini}
+                                                            Sesi: {pasien.antrean_hari_ini}
                                                         </div>
                                                     ) : (
                                                         <Button
@@ -191,7 +216,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                                             size="sm"
                                                             className="bg-slate-800 text-white hover:bg-slate-900"
                                                         >
-                                                            <ClipboardList className="mr-2 h-4 w-4" /> Masukkan Antrean
+                                                            <ClipboardList className="mr-2 h-4 w-4" /> Booking Sesi
                                                         </Button>
                                                     )}
                                                 </td>
@@ -210,8 +235,105 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                     </CardContent>
                 </Card>
 
+                {/* ===== CARD TABEL ANTREAN HARI INI ===== */}
+                <Card className="border-teal-100 shadow-sm">
+                    <CardHeader className="border-b border-teal-50 bg-teal-50/30 pb-4">
+                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                            <div>
+                                <CardTitle className="flex items-center gap-2 text-xl text-teal-900">
+                                    <Activity className="text-teal-600" />
+                                    Jadwal Sesi Pasien Hari Ini
+                                </CardTitle>
+                                <CardDescription className="text-teal-700/70">
+                                    Menampilkan daftar pasien yang akan diperiksa pada{' '}
+                                    <strong>{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                                </CardDescription>
+                            </div>
+
+                            {/* [BARU] DROPDOWN FILTER DOKTER */}
+                            <div className="w-full sm:w-64">
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <Filter className="h-4 w-4 text-teal-600" />
+                                    </div>
+                                    <Select value={filterDokterId} onValueChange={setFilterDokterId}>
+                                        <SelectTrigger className="h-10 border-teal-200 bg-white pl-9 text-teal-900 focus:ring-teal-500">
+                                            <SelectValue placeholder="Pilih Dokter" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="semua" className="font-bold text-teal-700">
+                                                Semua Dokter
+                                            </SelectItem>
+                                            {dokters.map((dokter) => (
+                                                <SelectItem key={dokter.id} value={dokter.id.toString()}>
+                                                    dr. {dokter.nama_dokter}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="border-b border-slate-100 bg-slate-50 text-xs tracking-wider text-slate-500 uppercase">
+                                    <tr>
+                                        <th className="px-6 py-4 font-bold">Jam Sesi</th>
+                                        <th className="px-6 py-4 font-bold">Nama Pasien</th>
+                                        <th className="px-6 py-4 font-bold">Poliklinik</th>
+                                        <th className="px-6 py-4 font-bold">Dokter</th>
+                                        <th className="px-6 py-4 text-center font-bold">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {/* [BARU] Gunakan array filteredAntreans, bukan antreans */}
+                                    {filteredAntreans && filteredAntreans.length > 0 ? (
+                                        filteredAntreans.map((antrean) => (
+                                            <tr key={antrean.id} className="transition-colors hover:bg-slate-50/50">
+                                                <td className="px-6 py-4">
+                                                    <div className="inline-flex items-center gap-1.5 rounded-md bg-slate-800 px-2.5 py-1 text-xs font-bold text-white">
+                                                        <Clock size={12} />
+                                                        {antrean.jam_kunjungan}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-slate-800">{antrean.nama_pasien}</td>
+                                                <td className="px-6 py-4 text-slate-600">{antrean.poli}</td>
+                                                <td className="px-6 py-4 text-slate-600">{antrean.nama_dokter}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span
+                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${
+                                                            antrean.status === 'menunggu'
+                                                                ? 'bg-amber-100 text-amber-700'
+                                                                : antrean.status === 'diperiksa'
+                                                                  ? 'bg-blue-100 text-blue-700'
+                                                                  : 'bg-emerald-100 text-emerald-700'
+                                                        }`}
+                                                    >
+                                                        {antrean.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                                {filterDokterId === 'semua'
+                                                    ? 'Belum ada pasien yang dijadwalkan untuk hari ini.'
+                                                    : 'Dokter ini belum memiliki jadwal pasien hari ini.'}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* ===== DIALOG 1: TAMBAH PASIEN BARU ===== */}
                 <Dialog open={isPasienDialogOpen} onOpenChange={setIsPasienDialogOpen}>
+                    {/* ... KODE FORM PASIEN BARU (Tetap Sama Seperti Sebelumnya) ... */}
                     <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
                         <form onSubmit={submitPasien}>
                             <DialogHeader className="mb-4">
@@ -329,17 +451,24 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                     </DialogContent>
                 </Dialog>
 
-                {/* ===== DIALOG 2: MASUKKAN KE ANTREAN ===== */}
+                {/* ===== DIALOG 2: MASUKKAN KE ANTREAN (Tetap Sama) ===== */}
                 <Dialog open={isAntreanDialogOpen} onOpenChange={setIsAntreanDialogOpen}>
                     <DialogContent className="sm:max-w-[450px]">
                         <form onSubmit={submitAntrean}>
                             <DialogHeader className="mb-4">
-                                <DialogTitle>Pendaftaran Antrean Poli</DialogTitle>
+                                <DialogTitle>Booking Sesi Pemeriksaan</DialogTitle>
                                 <DialogDescription>
-                                    Masukkan pasien <span className="font-bold text-slate-800">{selectedPasien?.nama}</span> ke dalam daftar tunggu
-                                    pemeriksaan.
+                                    Atur jadwal periksa untuk pasien <span className="font-bold text-slate-800">{selectedPasien?.nama}</span>.
                                 </DialogDescription>
                             </DialogHeader>
+
+                            {/* ALERT ERROR DARI BACKEND */}
+                            {(formAntrean.errors.jam_kunjungan || formAntrean.errors.tgl_kunjungan) && (
+                                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-700">
+                                    {formAntrean.errors.tgl_kunjungan && <p>{formAntrean.errors.tgl_kunjungan}</p>}
+                                    {formAntrean.errors.jam_kunjungan && <p>{formAntrean.errors.jam_kunjungan}</p>}
+                                </div>
+                            )}
 
                             <div className="space-y-4 py-2">
                                 <div>
@@ -348,7 +477,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                         value={formAntrean.data.poli}
                                         onValueChange={(val) => {
                                             formAntrean.setData('poli', val);
-                                            formAntrean.setData('dokter_id', ''); // <--- RESET pilihan dokter setiap ganti poli
+                                            formAntrean.setData('dokter_id', '');
                                         }}
                                         required
                                     >
@@ -356,8 +485,11 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                             <SelectValue placeholder="-- Pilih Poliklinik --" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Poli Umum">Poli Umum</SelectItem>
-                                            <SelectItem value="Poli Khitan">Poli Khitan</SelectItem>
+                                            {daftarPoli.map((poli, index) => (
+                                                <SelectItem key={index} value={poli}>
+                                                    Poli {poli}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -370,7 +502,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                         value={formAntrean.data.dokter_id}
                                         onValueChange={(val) => formAntrean.setData('dokter_id', val)}
                                         required
-                                        disabled={!formAntrean.data.poli} // <--- Disable dropdown dokter jika poli belum dipilih
+                                        disabled={!formAntrean.data.poli}
                                     >
                                         <SelectTrigger className="h-12 border-slate-200">
                                             <SelectValue
@@ -379,24 +511,45 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                         </SelectTrigger>
                                         <SelectContent>
                                             {dokters
-                                                // FILTER DOKTER DI SINI:
-                                                // Cocokkan string (misal: "Poli Khitan" ada kata "Khitan" dari dokter.keahlian)
-                                                .filter((dokter) => formAntrean.data.poli.includes(dokter.keahlian))
+                                                .filter((dokter) => dokter.keahlian === formAntrean.data.poli)
                                                 .map((dokter) => (
                                                     <SelectItem key={dokter.id} value={dokter.id.toString()}>
-                                                        {dokter.nama_dokter} ({dokter.keahlian})
+                                                        {dokter.nama_dokter} (Poli {dokter.keahlian})
                                                     </SelectItem>
                                                 ))}
-
-                                            {/* Tampilkan pesan jika tidak ada dokter untuk poli yang dipilih */}
-                                            {dokters.filter((dokter) => formAntrean.data.poli.includes(dokter.keahlian)).length === 0 && (
-                                                <SelectItem value="0" disabled>
-                                                    {formAntrean.data.poli ? 'Tidak ada dokter untuk Poli ini' : 'Pilih Poliklinik dulu'}
-                                                </SelectItem>
-                                            )}
                                         </SelectContent>
                                     </Select>
                                 </div>
+
+                                {/* INPUT TANGGAL & JAM */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                                            <CalendarDays size={14} /> Tanggal
+                                        </Label>
+                                        <Input
+                                            type="date"
+                                            value={formAntrean.data.tgl_kunjungan}
+                                            onChange={(e) => formAntrean.setData('tgl_kunjungan', e.target.value)}
+                                            required
+                                            className="h-12"
+                                            min={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                                            <Clock size={14} /> Jam Sesi
+                                        </Label>
+                                        <Input
+                                            type="time"
+                                            value={formAntrean.data.jam_kunjungan}
+                                            onChange={(e) => formAntrean.setData('jam_kunjungan', e.target.value)}
+                                            required
+                                            className="h-12"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-[11px] text-slate-500">*Pastikan jam sesi belum di-booking oleh orang lain.</p>
                             </div>
 
                             <DialogFooter className="mt-6">
@@ -404,7 +557,7 @@ export default function PendaftaranPasien({ pasiens = [], dokters = [] }: Props)
                                     Batal
                                 </Button>
                                 <Button type="submit" disabled={formAntrean.processing} className="bg-slate-900 text-white hover:bg-slate-800">
-                                    {formAntrean.processing ? 'Memproses...' : 'Cetak Nomor Antrean'}
+                                    {formAntrean.processing ? 'Memproses...' : 'Simpan Booking'}
                                 </Button>
                             </DialogFooter>
                         </form>

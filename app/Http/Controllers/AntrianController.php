@@ -14,21 +14,28 @@ class AntrianController extends Controller
     {
         // 1. Ambil data dokter yang sedang login
         $dokter = Auth::user()->dokter;
+
+        // Cegah error jika yang login bukan dokter
+        if (!$dokter) {
+            abort(403, 'Anda tidak memiliki akses ke halaman ini.');
+        }
+
         $hariIni = Carbon::today();
 
         // 2. Ambil data antrian hari ini untuk dokter tersebut
         $antrians = Antrian::with('pasien')
             ->where('dokter_id', $dokter->id)
             ->whereDate('tgl_kunjungan', $hariIni)
-            ->orderBy('no_antrian', 'asc')
+            ->orderBy('jam_kunjungan', 'asc') // <--- [UBAH] Urutkan berdasarkan Jam Kunjungan
             ->get()
             ->map(function ($antrian) {
                 return [
                     'id' => $antrian->id,
-                    'no' => 'A' . str_pad($antrian->no_antrian, 3, '0', STR_PAD_LEFT), // Hasil: A001, A002
+                    // 'no' dihapus karena sudah tidak dipakai
                     'name' => $antrian->pasien->nama,
                     'status' => $antrian->status,
-                    'time' => $antrian->created_at->format('H:i'), // Hasil: 08:30
+                    // [UBAH] Gunakan jam_kunjungan, bukan created_at
+                    'time' => \Carbon\Carbon::parse($antrian->jam_kunjungan)->format('H:i'),
                 ];
             });
 
@@ -58,8 +65,6 @@ class AntrianController extends Controller
         ]);
 
         // 3. Arahkan dokter ke halaman Diagnosis
-        // Nanti bisa diubah jadi route('diagnosis', $id) kalau halaman diagnosisnya sudah siap menerima ID
         return redirect()->route('diagnosis');
     }
 }
-

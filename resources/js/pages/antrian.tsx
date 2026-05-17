@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { CircleCheck, Clock, MoreVertical, Play, Search, Stethoscope, UserCheck, Users } from 'lucide-react';
+import { CircleCheck, Clock, Play, Search, Stethoscope, Users } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -14,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface AntrianProps {
     antrians: {
         id: number;
-        no: string;
+        // no: string; <-- Dihapus
         name: string;
         status: string;
         time: string;
@@ -65,14 +65,8 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                 {/* Header */}
                 <div className="animate-in fade-in slide-in-from-bottom-4 flex flex-col items-start justify-between gap-4 duration-700 md:flex-row md:items-center">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Daftar Antrian 🏥</h1>
-                        <p className="mt-1 text-slate-500">Kelola dan pantau antrian pasien hari ini secara real-time.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button className="inline-flex transform items-center gap-2 rounded-xl bg-teal-600 px-5 py-2.5 font-medium text-white shadow-lg shadow-teal-500/30 transition-all hover:-translate-y-0.5 hover:bg-teal-700">
-                            <UserCheck className="h-4 w-4" />
-                            Pendaftaran Manual
-                        </button>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Daftar Jadwal Pemeriksaan 🏥</h1>
+                        <p className="mt-1 text-slate-500">Kelola dan pantau jadwal sesi pasien Anda hari ini.</p>
                     </div>
                 </div>
 
@@ -121,7 +115,6 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
 
                 {/* Main Content Area */}
                 <div className="flex min-h-[500px] flex-col rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm backdrop-blur-xl md:p-8 dark:border-slate-700/50 dark:bg-slate-800/80">
-                    {/* Toolbar (Hanya ada search, tanpa filter) */}
                     <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                         <div className="group relative w-full sm:w-96">
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-teal-500">
@@ -129,7 +122,7 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                             </div>
                             <input
                                 type="text"
-                                placeholder="Cari nama pasien, no antrian..."
+                                placeholder="Cari nama pasien..."
                                 className="block w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pr-4 pl-11 text-sm text-slate-800 transition-all outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200"
                             />
                         </div>
@@ -140,9 +133,8 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                         <table className="w-full border-collapse text-left">
                             <thead>
                                 <tr className="border-b border-slate-100 dark:border-slate-700/50">
-                                    <th className="px-4 pt-2 pb-4 text-sm font-semibold text-slate-500">No. Antrian</th>
+                                    <th className="px-4 pt-2 pb-4 text-sm font-semibold text-slate-500">Jam Sesi</th>
                                     <th className="px-4 pt-2 pb-4 text-sm font-semibold text-slate-500">Nama Pasien</th>
-                                    <th className="px-4 pt-2 pb-4 text-sm font-semibold text-slate-500">Jam Masuk</th>
                                     <th className="px-4 pt-2 pb-4 text-sm font-semibold text-slate-500">Status</th>
                                     <th className="px-4 pt-2 pb-4 text-right text-sm font-semibold text-slate-500">Aksi</th>
                                 </tr>
@@ -155,14 +147,14 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                                             className="group border-b border-slate-50 transition-colors hover:bg-slate-50/50 dark:border-slate-800/50 dark:hover:bg-slate-800/30"
                                         >
                                             <td className="px-4 py-4">
-                                                <span className="inline-flex items-center justify-center rounded-lg bg-slate-100 px-3 py-1 font-mono font-bold tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                                    {item.no}
+                                                <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1 font-mono text-sm font-bold tracking-wide text-white">
+                                                    <Clock size={14} />
+                                                    {item.time} WIB
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4">
                                                 <p className="font-semibold text-slate-900 dark:text-white">{item.name}</p>
                                             </td>
-                                            <td className="px-4 py-4 text-sm font-medium text-slate-500">{item.time} WIB</td>
                                             <td className="px-4 py-4">
                                                 <span
                                                     className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${getStatusStyle(item.status)}`}
@@ -179,7 +171,6 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-right">
-                                                
                                                 {item.status === 'menunggu' && (
                                                     <Link
                                                         href={`/antrian/${item.id}/periksa`}
@@ -191,16 +182,13 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
                                                         Periksa
                                                     </Link>
                                                 )}
-                                                <button className="rounded-lg p-1.5 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-300">
-                                                    <MoreVertical className="h-5 w-5" />
-                                                </button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="py-10 text-center text-slate-500">
-                                            Belum ada antrian pasien hari ini.
+                                        <td colSpan={4} className="py-10 text-center text-slate-500">
+                                            Belum ada pasien yang dijadwalkan untuk hari ini.
                                         </td>
                                     </tr>
                                 )}
@@ -210,7 +198,7 @@ export default function Antrian({ antrians = [], stats = { total: 0, diperiksa: 
 
                     <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-6 dark:border-slate-700/50">
                         <p className="text-sm text-slate-500">
-                            Menampilkan <span className="font-semibold text-slate-700 dark:text-slate-300">{stats.total}</span> antrian hari ini
+                            Menampilkan <span className="font-semibold text-slate-700 dark:text-slate-300">{stats.total}</span> jadwal sesi hari ini
                         </p>
                     </div>
                 </div>
