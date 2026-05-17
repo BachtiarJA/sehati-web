@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pasien;
 use App\Models\Antrian;
 use App\Models\User;
+use App\Models\JadwalDokter; // <--- PASTIKAN INI DI-IMPORT
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -13,40 +14,57 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // 1. Hitung Total Pasien
+        // 1. Hitung Total Pasien & Dokter
         $totalPasien = Pasien::count();
-
         $totalDokter = User::where('role', 'dokter')->count();
 
-        // 3. Kunjungan dan Antrean Hari Ini
+        // 2. Kunjungan dan Antrean Hari Ini
         $hariIni = Carbon::today();
         $kunjunganHariIni = Antrian::whereDate('tgl_kunjungan', $hariIni)->count();
         $antreanTersisa = Antrian::whereDate('tgl_kunjungan', $hariIni)
-                                 ->where('status', 'menunggu')
-                                 ->count();
+            ->where('status', 'menunggu')
+            ->count();
 
-        // 4. Data Statistik Kunjungan 7 Hari Terakhir untuk Grafik (Recharts)
+        // 3. Data Statistik Kunjungan 7 Hari Terakhir
         $visitData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $count = Antrian::whereDate('tgl_kunjungan', $date)->count();
 
             $visitData[] = [
-                // translatedFormat('l') akan menghasilkan nama hari lokal (Senin, Selasa, dst)
                 'name' => $date->translatedFormat('l'),
                 'pasien' => $count
             ];
         }
 
-        // 5. Data Dokter Bertugas (Ambil semua/sebagian dokter dari database)
-        $dokterBertugas = User::where('role', 'dokter')
-            ->take(5)
+        // 4. Data Dokter Bertugas DINAMIS Berdasarkan Tabel Jadwal
+        // Cari nama hari ini dalam bahasa Indonesia
+        $hariInggris = Carbon::today()->format('l');
+        $mapHari = [
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+            'Sunday' => 'Minggu'
+        ];
+        $namaHariIni = $mapHari[$hariInggris];
+
+        // Cari jadwal yang aktif hari ini, lalu load relasi dokter-nya
+        $dokterBertugas = JadwalDokter::with('dokter')
+            ->where('hari', $namaHariIni)
+            ->where('is_aktif', true)
             ->get()
-            ->map(function ($dokter) {
+            ->map(function ($jadwal) {
+                // Format jam (misal dari "08:00:00" menjadi "08:00")
+                $jamMulai = Carbon::parse($jadwal->jam_mulai)->format('H:i');
+                $jamSelesai = Carbon::parse($jadwal->jam_selesai)->format('H:i');
+
                 return [
-                    'name' => $dokter->name,
-                    'spec' => $dokter->spesialisasi ?? 'Dokter Umum', // Sesuaikan dengan kolom tabel Anda
-                    'time' => '08:00 - 15:00' // Statis atau bisa diambil dari tabel jadwal
+                    'name' => 'dr. ' . $jadwal->dokter->nama_dokter, // Ambil dari tabel Dokter
+                    'spec' => 'Poli ' . $jadwal->dokter->keahlian,   // Ambil dari tabel Dokter
+                    'time' => $jamMulai . ' - ' . $jamSelesai        // Jam dinamis dari tabel Jadwal
                 ];
             });
 
