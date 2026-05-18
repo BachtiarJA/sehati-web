@@ -3,10 +3,12 @@ version: '3.8'
 services:
   # SERVICE 1: Frontend / Web Node.js
   frontend:
-    build: .
+    build: 
+      context: .
+      dockerfile: frontend-nodejs/Dockerfile
     container_name: web_frontend_node
     ports:
-      - '3000:3000'
+      - '5173:5173'
     depends_on:
       - backend
 
@@ -14,6 +16,7 @@ services:
   backend:
     build: .
     container_name: web_backend_laravel
+    command: php artisan serve --host=0.0.0.0 --port=80
     ports:
       - '8000:80'
     depends_on:
@@ -24,8 +27,8 @@ services:
     image: mysql:8.0
     container_name: db_kelompok30
     environment:
-      - MYSQL_ROOT_PASSWORD=rahasia_devops
-      - MYSQL_DATABASE=db_projek
+      - MYSQL_ROOT_PASSWORD=gRfT62$77
+      - MYSQL_DATABASE=sehati_db
     volumes:
       - db_data:/var/lib/mysql
 
