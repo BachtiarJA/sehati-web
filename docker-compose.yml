@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # SERVICE 1: Frontend / Web Node.js
   frontend:
-    build: ./frontend-nodejs
+    build: .
     container_name: web_frontend_node
     ports:
       - '3000:3000'
@@ -12,7 +12,7 @@ services:
 
   # SERVICE 2: Backend API Laravel
   backend:
-    build: ./backend-laravel
+    build: .
     container_name: web_backend_laravel
     ports:
       - '8000:80'
