@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # SERVICE 1: Frontend / Web Node.js
+  frontend:
+    build: ./frontend-nodejs
+    container_name: web_frontend_node
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+
+  # SERVICE 2: Backend API Laravel
+  backend:
+    build: ./backend-laravel
+    container_name: web_backend_laravel
+    ports:
+      - '8000:80'
+    depends_on:
+      - db-server
+
+  # SERVICE 3: Database MySQL
+  db-server:
+    image: mysql:8.0
+    container_name: db_kelompok30
+    environment:
+      - MYSQL_ROOT_PASSWORD=rahasia_devops
+      - MYSQL_DATABASE=db_projek
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
