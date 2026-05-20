@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+<<<<<<< Updated upstream
   # SERVICE 1: Frontend / Web Node.js
   frontend:
     build: 
@@ -17,15 +18,27 @@ services:
     build: .
     container_name: web_backend_laravel
     command: php artisan serve --host=0.0.0.0 --port=80
+=======
+  # SERVICE 1: Web server + Backend API (Aset frontend sudah melekat utuh di dalam image ini)
+  web_backend_laravel:
+    image: ghcr.io/bachtiarja/sehati-web:latest
+    container_name: web_backend_laravel
+    restart: always
+>>>>>>> Stashed changes
     ports:
-      - '8000:80'
+      - '8000:80' # Mengakses port 8000 pada VPS akan langsung direspons Nginx internal container
+    env_file:
+      - .env
+    volumes:
+      - ./storage:/var/www/html/storage
     depends_on:
-      - db-server
+      - db_kelompok30
 
-  # SERVICE 3: Database MySQL
-  db-server:
+  # SERVICE 2: Database MySQL (Nama service disamakan dengan container name agar DB_HOST aman)
+  db_kelompok30:
     image: mysql:8.0
     container_name: db_kelompok30
+    restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=gRfT62$77
       - MYSQL_DATABASE=sehati_db
