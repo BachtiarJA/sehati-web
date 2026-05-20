@@ -189,7 +189,7 @@ function Home() {
                                 <div className="relative">
                                     <div className="absolute -inset-4 rounded-[40px] bg-gradient-to-r from-[#04989F]/20 to-[#D66604]/20 blur-xl"></div>
                                     <img
-                                        src="/2021-06-24.webp"
+                                        src="/klinik.png"
                                         alt="Klinik Sehati Medika"
                                         className="relative h-[450px] w-full rounded-3xl object-cover shadow-2xl"
                                     />
