@@ -18,8 +18,8 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     //Get dokter
-    Route::get('/mobile/doctors', [DokterController::class, 'index']);
-    
+    Route::get('/mobile/doctors', [BookingController::class, 'listDokter']);
+
     //Dashboard Api
     Route::get('/mobile/dashboard', [JadwalObatController::class, 'dashboardMobile']);
 
