@@ -16,6 +16,9 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    //Get dokter
+    Route::get('/mobile/dokter', [DokterController::class, 'index']);
+
     // Booking Antrian
     Route::post('/mobile/booking', [BookingController::class, 'store']);
 
