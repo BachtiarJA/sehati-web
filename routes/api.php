@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\DokterController;
 
 // ===========================================
 // RUTE PUBLIK (Tidak butuh Token)
@@ -17,7 +18,10 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     //Get dokter
-    Route::get('/mobile/dokter', [DokterController::class, 'index']);
+    Route::get('/mobile/doctors', [DokterController::class, 'index']);
+    
+    //Dashboard Api
+    Route::get('/mobile/dashboard', [JadwalObatController::class, 'dashboardMobile']);
 
     // Booking Antrian
     Route::post('/mobile/booking', [BookingController::class, 'store']);

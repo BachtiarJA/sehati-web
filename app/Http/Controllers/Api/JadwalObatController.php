@@ -85,4 +85,77 @@ class JadwalObatController extends Controller
             'waktu_diminum' => $jadwal->waktu_aktual->format('H:i')
         ], 200);
     }
+
+
+    public function dashboardMobile(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $pasien = $user->pasien;
+
+            if (!$pasien) {
+                return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
+            }
+
+            // Fallback Data Terstruktur: Menyuplai komponen data sesuai kebutuhan UI home_screen.dart
+            $payloadBeranda = [
+                'tanggal_hari_ini' => \Carbon\Carbon::now()->translatedFormat('l, d M Y'),
+                'pasien' => [
+                    'nama' => $pasien->nama ?? $user->name,
+                ],
+                'ringkasan' => [
+                    'total_jadwal_kunjungan' => '1 Jadwal',
+                    'total_jadwal_obat' => '3 Jadwal',
+                ],
+                'visits' => [
+                    [
+                        'date_label' => 'Hari ini',
+                        'poli' => 'Poli Umum',
+                        'doctor' => 'dr. Yoshinori, Sp. PD',
+                        'time' => '10:00',
+                        'queue_number' => 'A-024',
+                        'status' => 'Status: Menunggu Panggilan',
+                        'is_today' => true
+                    ]
+                ],
+                'medicines' => [
+                    [
+                        'time' => '07:00',
+                        'medicine_name' => 'Paracetamol 500 mg',
+                        'instruction' => 'Diminum setelah sarapan',
+                        'status' => 'Belum diverifikasi',
+                        'type' => 'tablet',
+                        'dose' => '1 tablet',
+                        'description' => 'Obat penurun demam dan pereda nyeri resep Klinik Sehati.'
+                    ],
+                    [
+                        'time' => '12:30',
+                        'medicine_name' => 'Amoxicillin 250 mg',
+                        'instruction' => 'Diminum setelah makan siang',
+                        'status' => 'Belum diverifikasi',
+                        'type' => 'liquid',
+                        'dose' => '1 kapsul',
+                        'description' => 'Antibiotik resep dokter. Wajib dihabiskan sesuai aturan.'
+                    ],
+                    [
+                        'time' => '19:00',
+                        'medicine_name' => 'Vitamin B Complex',
+                        'instruction' => 'Diminum setelah makan malam',
+                        'status' => 'Menunggu jadwal',
+                        'type' => 'tablet',
+                        'dose' => '1 tablet',
+                        'description' => 'Suplemen pendukung masa pemulihan daya tahan tubuh.'
+                    ]
+                ]
+            ];
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $payloadBeranda
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal memproses beranda: ' . $e->getMessage()], 500);
+        }
+    }
 }
