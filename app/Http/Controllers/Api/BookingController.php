@@ -50,15 +50,13 @@ class BookingController extends Controller
                 ->first();
 
             // Fallback: Jika tidak ada jadwal spesifik hari itu, ambil jadwal pertama yang tersedia
-            if (!$jadwal) {
-                $jadwal = \DB::table('jadwal_dokters')
-                    ->where('dokter_id', $doc->id)
-                    ->first();
+            if ($jadwal && $jadwal->jam_mulai && $jadwal->jam_selesai) {
+                $jamMulai = Carbon::parse($jadwal->jam_mulai)->format('H:i');
+                $jamSelesai = Carbon::parse($jadwal->jam_selesai)->format('H:i');
+            } else {
+                $jamMulai = 'Libur';
+                $jamSelesai = '';
             }
-
-            // 💡 3. FIX ANTI-JAM-LAPTOP: Pastikan nilainya benar-benar ada di DB sebelum di-parse Carbon
-            $jamMulai = ($jadwal && $jadwal->jam_mulai) ? Carbon::parse($jadwal->jam_mulai)->format('H:i') : '08:00';
-            $jamSelesai = ($jadwal && $jadwal->jam_selesai) ? Carbon::parse($jadwal->jam_selesai)->format('H:i') : '14:00';
 
             return [
                 'id' => $doc->id,
