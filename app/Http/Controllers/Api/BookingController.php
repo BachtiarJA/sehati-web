@@ -23,6 +23,9 @@ class BookingController extends Controller
             ? Carbon::parse($tanggalInput)->toDateString() 
             : Carbon::today()->toDateString();
 
+        // 💡 1. Dapatkan nama hari kunjungan dalam bahasa Indonesia (Contoh: "Senin", "Selasa")
+        $namaHari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
+
         $query = Dokter::query();
 
         if ($layanan === 'khitan') {
@@ -33,30 +36,37 @@ class BookingController extends Controller
 
         $daftarDokter = $query->get();
 
-        $dataDokterResponse = $daftarDokter->map(function ($doc) use ($tanggal) {
-            // 💡 RIIL: Hitung jumlah antrean saat ini di tabel 'antrians'
+        $dataDokterResponse = $daftarDokter->map(function ($doc) use ($tanggal, $namaHari) {
+            
             $estimasiAntrean = Antrian::where('dokter_id', $doc->id)
                 ->whereDate('tgl_kunjungan', $tanggal)
                 ->where('status', 'menunggu')
                 ->count();
 
-            // 💡 RIIL: Ambil data jam kerja dari tabel 'jadwal_dokters' sesuai ERD Baru Maret 2026
+            // 💡 2. Cari jadwal yang dokter_id-nya COCOK dan HARI-nya sesuai dengan kalender HP
             $jadwal = \DB::table('jadwal_dokters')
                 ->where('dokter_id', $doc->id)
+                ->where('hari', 'like', '%' . $namaHari . '%')
                 ->first();
 
-            // Berikan nilai default jika data di tabel jadwal_dokters belum diisi
-            $jamMulai = $jadwal ? Carbon::parse($jadwal->jam_mulai)->format('H:i') : '08:00';
-            $jamSelesai = $jadwal ? Carbon::parse($jadwal->jam_selesai)->format('H:i') : '14:00';
+            // Fallback: Jika tidak ada jadwal spesifik hari itu, ambil jadwal pertama yang tersedia
+            if (!$jadwal) {
+                $jadwal = \DB::table('jadwal_dokters')
+                    ->where('dokter_id', $doc->id)
+                    ->first();
+            }
+
+            // 💡 3. FIX ANTI-JAM-LAPTOP: Pastikan nilainya benar-benar ada di DB sebelum di-parse Carbon
+            $jamMulai = ($jadwal && $jadwal->jam_mulai) ? Carbon::parse($jadwal->jam_mulai)->format('H:i') : '08:00';
+            $jamSelesai = ($jadwal && $jadwal->jam_selesai) ? Carbon::parse($jadwal->jam_selesai)->format('H:i') : '14:00';
 
             return [
                 'id' => $doc->id,
                 'nama' => $doc->nama_dokter, 
                 'spesialis' => $doc->keahlian, 
-                'jam_mulai' => $jamMulai,     // 💡 BARU: Sesuai tabel jadwal_dokters
-                'jam_selesai' => $jamSelesai, // 💡 BARU: Sesuai tabel jadwal_dokters
+                'jam_mulai' => $jamMulai,     
+                'jam_selesai' => $jamSelesai, 
                 'estimasi_antrean' => $estimasiAntrean 
-                // 📝 Kolom Rating Dihapus Total karena tidak ada di ERD Baru
             ];
         });
 
