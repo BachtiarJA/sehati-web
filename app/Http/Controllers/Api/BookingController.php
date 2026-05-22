@@ -80,71 +80,83 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->has('doctorId')) {
-            $request->merge([
-                'dokter_id' => $request->doctorId,
-                'tgl_kunjungan' => $request->selectedDate,
-                'jam_kunjungan' => $request->selectedTime, 
-            ]);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'dokter_id' => 'required|exists:dokter,id', 
+        // 1. Validasi input dasar dari Flutter
+        $request->validate([
+            'dokter_id' => 'required|exists:dokter,id',
             'tgl_kunjungan' => 'required|date',
-            'jam_kunjungan' => 'required', 
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        $user = $request->user();
+        $pasien = $user->pasien;
+
+        if (!$pasien) {
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Profil pasien tidak ditemukan.'
+            ], 404);
+        }
+
+        // 2. Anti-Spam: Cek apakah pasien sudah punya antrean 'menunggu' di dokter & hari yang sama
+        $isDoubleBooking = Antrian::where('pasien_id', $pasien->id)
+            ->where('dokter_id', $request->dokter_id)
+            ->whereDate('tgl_kunjungan', $request->tgl_kunjungan)
+            ->where('status', 'menunggu')
+            ->exists();
+
+        if ($isDoubleBooking) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda sudah memiliki nomor antrean aktif untuk dokter ini pada tanggal tersebut.'
+            ], 400);
         }
 
         try {
-            $user = $request->user();
-            $pasien = $user->pasien;
+            // 3. Gunakan Database Transaction agar perhitungan nomor antrean aman dari bentrok data
+            return DB::transaction(function () use ($request, $pasien) {
+                $tanggal = Carbon::parse($request->tgl_kunjungan)->toDateString();
+                $namaHari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
 
-            if (!$pasien) {
-                return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
-            }
+                // Ambil jam mulai praktik dokter pada hari tersebut sebagai jam kunjungan default
+                $jadwal = DB::table('jadwal_dokters')
+                    ->where('dokter_id', $request->dokter_id)
+                    ->where('hari', 'like', '%' . $namaHari . '%')
+                    ->first();
 
-            $tanggal = Carbon::parse($request->tgl_kunjungan)->toDateString();
+                $jamKunjungan = $jadwal ? $jadwal->jam_mulai : '08:00:00';
 
-            // Perbaikan format jam agar ramah database waktu (Contoh: "08.30 WIB" -> "08:30")
-            $jamClean = str_replace([' WIB', '.'], ['', ':'], $request->jam_kunjungan);
+                // 4. Perhitungan Nomor Antrean Otomatis: Cari nomor tertinggi di hari itu, lalu tambahkan 1
+                $latestNoAntrian = Antrian::where('dokter_id', $request->dokter_id)
+                    ->whereDate('tgl_kunjungan', $tanggal)
+                    ->max('no_antrian');
 
-            $antrianTerakhir = Antrian::where('dokter_id', $request->dokter_id)
-                ->whereDate('tgl_kunjungan', $tanggal)
-                ->max('no_antrian');
+                $noAntrianBaru = $latestNoAntrian ? $latestNoAntrian + 1 : 1;
 
-            $nomorBaru = $antrianTerakhir ? $antrianTerakhir + 1 : 1;
+                // 5. Eksekusi simpan ke tabel antrians sesuai ERD
+                $antrian = Antrian::create([
+                    'pasien_id' => $pasien->id,
+                    'dokter_id' => $request->dokter_id,
+                    'tgl_kunjungan' => $tanggal,
+                    'jam_kunjungan' => $jamKunjungan,
+                    'no_antrian' => $noAntrianBaru,
+                    'status' => 'menunggu'
+                ]);
 
-            $antrian = Antrian::create([
-                'pasien_id' => $pasien->id,       
-                'dokter_id' => $request->dokter_id, 
-                'tgl_kunjungan' => $tanggal,
-                'jam_kunjungan' => $jamClean, 
-                'no_antrian' => $nomorBaru,
-                'status' => 'menunggu',
-            ]);
-
-            $formatTanggalCode = Carbon::parse($antrian->tgl_kunjungan)->format('dmy');
-            $formatNomorUrut = str_pad($antrian->no_antrian, 3, '0', STR_PAD_LEFT);
-            $nomorBookingLive = "BK-{$formatTanggalCode}-{$formatNomorUrut}";
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Booking antrian berhasil disimpan ke database!',
-                'data' => [
-                    'no_antrian' => $antrian->no_antrian,
-                    'nomor_booking' => $nomorBookingLive, 
-                    'tgl_kunjungan' => Carbon::parse($antrian->tgl_kunjungan)->format('d M Y'),
-                    'jam_kunjungan' => $antrian->jam_kunjungan,
-                    'nama_pasien' => $pasien->nama, 
-                    'status' => $antrian->status
-                ]
-            ], 201);
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Nomor antrean berhasil dipesan!',
+                    'data' => [
+                        'id_booking' => $antrian->id,
+                        'no_antrian' => $antrian->no_antrian,
+                        'jam_kunjungan' => Carbon::parse($antrian->jam_kunjungan)->format('H:i') . ' WIB'
+                    ]
+                ], 201);
+            });
 
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan server: ' . $e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Gagal menyimpan transaksi: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
