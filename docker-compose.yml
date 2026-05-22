@@ -26,5 +26,18 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  # SERVICE 3: phpMyAdmin (UI untuk Database)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: sehati_phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db_kelompok30 # Sesuai dengan nama service database di atas
+      - PMA_PORT=3306
+    restart: unless-stopped
+    depends_on:
+      - db_kelompok30
+
 volumes:
   db_data:
