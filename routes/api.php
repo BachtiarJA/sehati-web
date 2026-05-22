@@ -17,6 +17,8 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
+
     //Get dokter
     Route::get('/mobile/doctors', [BookingController::class, 'listDokter']);
 

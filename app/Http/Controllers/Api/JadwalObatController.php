@@ -23,7 +23,6 @@ class JadwalObatController extends Controller
         // Cari jadwal HARI INI milik pasien tersebut
         $jadwalHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
             ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
-                // Pastikan jadwal ini benar-benar milik pasien yang sedang login
                 $query->where('pasien_id', $pasien->id);
             })
             ->whereDate('waktu_jadwal', Carbon::today())
@@ -32,16 +31,15 @@ class JadwalObatController extends Controller
 
         // Format data agar mudah dibaca oleh Frontend Developer (Mobile App)
         $data = $jadwalHariIni->map(function ($jadwal) {
-            // Ambil semua nama obat dari resep pada pemeriksaan tersebut
             $daftarObat = $jadwal->pemeriksaan->resepObats->map(function ($resep) {
                 return $resep->obat->nama_obat . ' (' . $resep->dosis . ')';
             })->implode(', ');
 
             return [
                 'id_jadwal' => $jadwal->id,
-                'jam_minum' => $jadwal->waktu_jadwal->format('H:i'), // Contoh: "08:00"
-                'daftar_obat' => $daftarObat, // Contoh: "Paracetamol (500mg), Amoxicillin (500mg)"
-                'status' => $jadwal->status, // "belum", "sudah", atau "terlewat"
+                'jam_minum' => $jadwal->waktu_jadwal->format('H:i'), 
+                'daftar_obat' => $daftarObat, 
+                'status' => $jadwal->status, 
                 'waktu_diminum' => $jadwal->waktu_aktual ? $jadwal->waktu_aktual->format('H:i') : null,
             ];
         });
@@ -60,7 +58,6 @@ class JadwalObatController extends Controller
     {
         $pasien = $request->user()->pasien;
 
-        // Cari jadwal berdasarkan ID dan pastikan itu milik pasien yang login
         $jadwal = JadwalMinumObat::whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
                 $query->where('pasien_id', $pasien->id);
             })->find($id_jadwal);
@@ -73,10 +70,9 @@ class JadwalObatController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Obat ini sudah ditandai diminum sebelumnya.'], 400);
         }
 
-        // Update database: Tandai sudah diminum dan catat jam berapanya
         $jadwal->update([
             'status' => 'sudah',
-            'waktu_aktual' => now() // Menyimpan waktu real-time pasien klik tombol
+            'waktu_aktual' => now() 
         ]);
 
         return response()->json([
@@ -86,7 +82,9 @@ class JadwalObatController extends Controller
         ], 200);
     }
 
-
+    /**
+     * 🌐 DIUBAH JADI RIIL: Menyuplai komponen data Beranda Mobile dari Database Berdasarkan ERD
+     */
     public function dashboardMobile(Request $request)
     {
         try {
@@ -97,56 +95,76 @@ class JadwalObatController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
             }
 
-            // Fallback Data Terstruktur: Menyuplai komponen data sesuai kebutuhan UI home_screen.dart
+            // =========================================================================
+            // 1. DATA KUNJUNGAN HARI INI (Tabel: antrians JOIN dokter)
+            // =========================================================================
+            $antrianHariIni = \DB::table('antrians')
+                ->join('dokter', 'antrians.dokter_id', '=', 'dokter.id')
+                ->where('antrians.pasien_id', $pasien->id)
+                ->whereDate('antrians.tgl_kunjungan', Carbon::today())
+                ->orderBy('antrians.jam_kunjungan', 'asc')
+                ->select('antrians.*', 'dokter.nama_dokter', 'dokter.keahlian')
+                ->get();
+
+            $visitsPayload = $antrianHariIni->map(function ($visit) {
+                return [
+                    'date_label' => 'Hari ini',
+                    'poli' => $visit->keahlian,
+                    'doctor' => $visit->nama_dokter,
+                    'time' => Carbon::parse($visit->jam_kunjungan)->format('H:i'),
+                    'queue_number' => 'No. ' . $visit->no_antrian,
+                    'status' => 'Status: ' . ucfirst($visit->status),
+                    'is_today' => true
+                ];
+            })->toArray();
+
+            // =========================================================================
+            // 2. DATA JADWAL OBAT HARI INI (Menggunakan Eloquent JadwalMinumObat)
+            // =========================================================================
+            $jadwalObatHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
+                ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
+                    $query->where('pasien_id', $pasien->id);
+                })
+                ->whereDate('waktu_jadwal', Carbon::today())
+                ->orderBy('waktu_jadwal', 'asc')
+                ->get();
+
+            $medicinesPayload = [];
+            foreach ($jadwalObatHariIni as $jadwal) {
+                $timeLabel = Carbon::parse($jadwal->waktu_jadwal)->format('H:i');
+                
+                // Format status agar ramah dibaca komponen UI mobile kalian
+                $statusLabel = 'Belum diverifikasi';
+                if ($jadwal->status === 'sudah') $statusLabel = 'Sudah diminum';
+                if ($jadwal->status === 'terlewat') $statusLabel = 'Terlewat';
+
+                foreach ($jadwal->pemeriksaan->resepObats as $resep) {
+                    $medicinesPayload[] = [
+                        'time' => $timeLabel,
+                        'medicine_name' => $resep->obat->nama_obat ?? 'Nama Obat',
+                        'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter',
+                        'status' => $statusLabel,
+                        'type' => $resep->obat->jenis ?? 'tablet',
+                        'dose' => $resep->dosis ?? '1 strip',
+                        'description' => $resep->obat->kategori ?? 'Obat resep Klinik Sehati.'
+                    ];
+                }
+            }
+
+            // =========================================================================
+            // 3. MERAKIT PAYLOAD AKHIR UNTUK HOME_SCREEN FLUTTER
+            // =========================================================================
             $payloadBeranda = [
-                'tanggal_hari_ini' => \Carbon\Carbon::now()->translatedFormat('l, d M Y'),
+                'tanggal_hari_ini' => Carbon::now()->locale('id')->translatedFormat('l, d M Y'),
                 'pasien' => [
                     'nama' => $pasien->nama ?? $user->name,
                 ],
                 'ringkasan' => [
-                    'total_jadwal_kunjungan' => '1 Jadwal',
-                    'total_jadwal_obat' => '3 Jadwal',
+                    'total_jadwal_kunjungan' => count($visitsPayload) . ' Jadwal',
+                    'total_jadwal_obat' => count($medicinesPayload) . ' Jadwal',
                 ],
-                'visits' => [
-                    [
-                        'date_label' => 'Hari ini',
-                        'poli' => 'Poli Umum',
-                        'doctor' => 'dr. Yoshinori, Sp. PD',
-                        'time' => '10:00',
-                        'queue_number' => 'A-024',
-                        'status' => 'Status: Menunggu Panggilan',
-                        'is_today' => true
-                    ]
-                ],
-                'medicines' => [
-                    [
-                        'time' => '07:00',
-                        'medicine_name' => 'Paracetamol 500 mg',
-                        'instruction' => 'Diminum setelah sarapan',
-                        'status' => 'Belum diverifikasi',
-                        'type' => 'tablet',
-                        'dose' => '1 tablet',
-                        'description' => 'Obat penurun demam dan pereda nyeri resep Klinik Sehati.'
-                    ],
-                    [
-                        'time' => '12:30',
-                        'medicine_name' => 'Amoxicillin 250 mg',
-                        'instruction' => 'Diminum setelah makan siang',
-                        'status' => 'Belum diverifikasi',
-                        'type' => 'liquid',
-                        'dose' => '1 kapsul',
-                        'description' => 'Antibiotik resep dokter. Wajib dihabiskan sesuai aturan.'
-                    ],
-                    [
-                        'time' => '19:00',
-                        'medicine_name' => 'Vitamin B Complex',
-                        'instruction' => 'Diminum setelah makan malam',
-                        'status' => 'Menunggu jadwal',
-                        'type' => 'tablet',
-                        'dose' => '1 tablet',
-                        'description' => 'Suplemen pendukung masa pemulihan daya tahan tubuh.'
-                    ]
-                ]
+                'visits' => $visitsPayload,
+                'medicines' => $medicinesPayload
             ];
 
             return response()->json([
@@ -155,7 +173,7 @@ class JadwalObatController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Gagal memproses beranda: ' . $e->getMessage()], 500);
+            return response()->json(['status' => 'error', 'message' => 'Gagal memproses beranda riil: ' . $e->getMessage()], 500);
         }
     }
 }
