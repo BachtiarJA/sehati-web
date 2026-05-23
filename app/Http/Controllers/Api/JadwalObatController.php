@@ -96,54 +96,27 @@ class JadwalObatController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
             }
 
-            // 💡 FIX TIMEZONE VPS: Kunci ke Asia/Jakarta agar harinya sinkron dengan kalender HP-mu
+            // 🔍 =================== START SUNTIKAN DEBUG DATA ===================
             $hariIniKlinik = Carbon::today('Asia/Jakarta')->toDateString();
+            $antrianTerakhirDiDB = \DB::table('antrians')
+                ->where('pasien_id', $pasien->id)
+                ->orderBy('id', 'desc')
+                ->first();
 
-            // 💡 FIX QUERY BUILDER: Ubah ke Full Model Eloquent agar pembacaan nama tabel dinamis
-            $antrianTable = (new Antrian)->getTable();
-            $antrianHariIni = Antrian::join('dokter', "{$antrianTable}.dokter_id", '=', 'dokter.id')
-                ->where("{$antrianTable}.pasien_id", $pasien->id)
-                ->whereDate("{$antrianTable}.tgl_kunjungan", $hariIniKlinik)
-                ->orderBy("{$antrianTable}.jam_kunjungan", 'asc')
-                ->select("{$antrianTable}.*", 'dokter.nama_dokter', 'dokter.keahlian')
-                ->get();
-
-            $visitsPayload = $antrianHariIni->map(function ($visit) { 
-                return [
-                    'date_label' => 'Hari ini', 
-                    'poli' => $visit->keahlian, 
-                    'doctor' => $visit->nama_dokter, 
-                    'time' => Carbon::parse($visit->jam_kunjungan)->format('H:i'), 
-                    'queue_number' => 'No. ' . $visit->no_antrian, 
-                    'status' => 'Status: ' . ucfirst($visit->status), 
-                    'is_today' => true
-                ]; 
-            })->toArray();
-
-            $jadwalObatHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
-                ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) { 
-                    $query->where('pasien_id', $pasien->id); 
-                })
-                ->whereDate('waktu_jadwal', $hariIniKlinik)
-                ->orderBy('waktu_jadwal', 'asc')
-                ->get();
-
-            $medicinesPayload = [];
-            foreach ($jadwalObatHariIni as $jadwal) {
-                $timeLabel = Carbon::parse($jadwal->waktu_jadwal)->format('H:i');
-                $statusLabel = $jadwal->status === 'sudah' ? 'Sudah diminum' : ($jadwal->status === 'terlewat' ? 'Terlewat' : 'Belum diverifikasi');
-                foreach ($jadwal->pemeriksaan->resepObats as $resep) {
-                    $medicinesPayload[] = [
-                        'time' => $timeLabel, 
-                        'medicine_name' => $resep->obat->nama_obat ?? 'Nama Obat', 
-                        'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter', 
-                        'status' => $statusLabel, 
-                        'type' => $resep->obat->jenis ?? 'tablet', 
-                        'dose' => $resep->dosis ?? '1 strip', 
-                        'description' => $resep->obat->kategori ?? 'Obat resep Klinik Sehati.'
-                    ];
-                }
-            }
+            return response()->json([
+                'status' => 'success',
+                'DIAGNOSIS_DEBUG_MEDVORA' => [
+                    'waktu_sekarang_vps' => Carbon::now()->toString(),
+                    'tanggal_hari_ini_target_laravel' => $hariIniKlinik,
+                    'pasien_id_yang_sedang_login' => $pasien->id,
+                    'data_booking_terakhir_di_tabel_db' => $antrianTerakhirDiDB ? [
+                        'id' => $antrianTerakhirDiDB->id,
+                        'pasien_id' => $antrianTerakhirDiDB->pasien_id,
+                        'tgl_kunjungan_asli_db' => $antrianTerakhirDiDB->tgl_kunjungan,
+                        'status_asli_db' => $antrianTerakhirDiDB->status,
+                    ] : 'Tabel antrians kosong melongpong untuk pasien ini!'
+                ]
+            ], 200);
 
             return response()->json([
                 'status' => 'success', 
