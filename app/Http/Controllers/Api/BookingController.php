@@ -74,6 +74,60 @@ class BookingController extends Controller
     }
 
     /**
+     * 🌐 GET: Mengambil detail rekam medis dinamis berdasarkan antrian_id (FULL RELASI ERD)
+     */
+    public function detailRekamMedis($antrianId)
+    {
+        // Tarik data pemeriksaan berserta relasi resep, obat, dan dokter penanggung jawab
+        $pemeriksaan = \App\Models\Pemeriksaan::with(['resepObats.obat', 'antrian.dokter'])
+            ->where('antrian_id', $antrianId)
+            ->first();
+
+        // Keamanan ganda: Jika pasien klik tombol tapi dokter di poliklinik belum input rekam medis
+        if (!$pemeriksaan) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data detail rekam medis belum diterbitkan oleh dokter poliklinik.'
+            ], 404);
+        }
+
+        $antrian = $pemeriksaan->antrian;
+
+        // Formatisasi kode booking agar seragam dengan tampilan kartu (Contoh: BK-180526-001)
+        $tglFormat = Carbon::parse($antrian->tgl_kunjungan)->format('dmy');
+        $noPad = str_pad($antrian->no_antrian, 3, '0', STR_PAD_LEFT);
+        $kodeBooking = "BK-{$tglFormat}-{$noPad}";
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id_pemeriksaan' => $pemeriksaan->id,
+                'kode_booking' => $kodeBooking,
+                'tgl_periksa' => Carbon::parse($antrian->tgl_kunjungan)->locale('id')->translatedFormat('d F Y'),
+                'waktu_periksa' => Carbon::parse($antrian->jam_kunjungan)->format('H:i') . ' WIB',
+                'dokter' => $antrian->dokter->nama_dokter,
+                'poli' => $antrian->dokter->keahlian,
+                'keluhan' => $pemeriksaan->keluhan,
+                'diagnosa' => $pemeriksaan->diagnosa,
+                'tindakan' => $pemeriksaan->tindakan,
+                'fisik' => [
+                    'berat_badan' => $pemeriksaan->berat_badan . ' kg',
+                    'tinggi_badan' => $pemeriksaan->tinggi_badan . ' cm',
+                ],
+                'resep_obat' => $pemeriksaan->resepObats->map(function ($resep) {
+                    return [
+                        'nama_obat' => $resep->obat->nama_obat ?? 'Nama Obat',
+                        'jenis' => $resep->obat->jenis ?? 'tablet',
+                        'dosis' => $resep->dosis,
+                        'jumlah' => $resep->jumlah . ' item',
+                        'aturan_minum' => $resep->berapa_kali . 'x sehari (' . ($resep->keterangan ?? 'Sesudah makan') . ')',
+                    ];
+                })
+            ]
+        ], 200);
+    }
+
+    /**
      * 📥 POST: Menyimpan transaksi booking antrian baru ke database
      */
     public function store(Request $request)
@@ -152,3 +206,4 @@ class BookingController extends Controller
         }
     }
 }
+
