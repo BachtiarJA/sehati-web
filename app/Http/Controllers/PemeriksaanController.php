@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Antrian;
 use App\Models\Pemeriksaan;
+use App\Models\JadwalMinumObat; // 💡 FIX 1: Wajib di-import agar baris create jadwal tidak error
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // 💡 FIX 2: Wajib di-import untuk kebutuhan DB::transaction
 use Inertia\Inertia;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
@@ -28,13 +30,13 @@ class PemeriksaanController extends Controller
                 return [
                     'id' => $p->id,
                     'nama_pasien' => $p->antrian->pasien->nama ?? 'Unknown',
-                    'tinggi_badan' => $p->tinggi_badan, // <-- TAMBAHKAN INI
+                    'tinggi_badan' => $p->tinggi_badan,
                     'berat_badan' => $p->berat_badan,
                     'keluhan' => $p->keluhan,
                     'diagnosa' => $p->diagnosa,
                     'tindakan' => $p->tindakan,
-                    'tanggal_raw' => $p->created_at->format('Y-m-d'), // Untuk logika filter (Contoh: 2026-04-26)
-                    'tanggal_format' => $p->created_at->format('d M Y'), // Untuk ditampilkan (Contoh: 26 Apr 2026)
+                    'tanggal_raw' => $p->created_at->format('Y-m-d'),
+                    'tanggal_format' => $p->created_at->format('d M Y'),
                 ];
             });
 
@@ -57,31 +59,38 @@ class PemeriksaanController extends Controller
         ]);
     }
 
-    // Fungsi Simpan Data Baru
+    // Fungsi Simpan Data Baru (FIXED & AMAN)
     public function store(Request $request)
     {
         $request->validate([
             'antrian_id' => 'required',
-            'tinggi_badan' => 'required|numeric', // <-- TAMBAHKAN INI
+            'tinggi_badan' => 'required|numeric',
             'berat_badan' => 'required|numeric',
             'keluhan' => 'required',
             'diagnosa' => 'required',
             'tindakan' => 'required',
         ]);
 
-        Pemeriksaan::create($request->all());
+        return DB::transaction(function () use ($request) {
 
-        // Otomatis ubah status antrian pasien menjadi 'selesai'
-        Antrian::where('id', $request->antrian_id)->update(['status' => 'selesai']);
+            // 💡 FIX 3: Tangkap hasil create ke dalam variabel $pemeriksaan
+            $pemeriksaan = Pemeriksaan::create($request->all());
 
-        return redirect()->back();
-    }
+            // Sekarang variabel $pemeriksaan->id sudah valid dan bisa dibaca fungsi generator
+            $this->generateJadwalMinumObat($pemeriksaan->id);
+
+            // Otomatis ubah status antrian pasien menjadi 'selesai'
+            Antrian::where('id', $request->antrian_id)->update(['status' => 'selesai']);
+
+            return redirect()->back();
+        });
+    }  
 
     // Fungsi Update Data
     public function update(Request $request, $id)
     {
         $request->validate([
-            'tinggi_badan' => 'required|numeric', // <-- TAMBAHKAN INI
+            'tinggi_badan' => 'required|numeric',
             'berat_badan' => 'required|numeric',
             'keluhan' => 'required',
             'diagnosa' => 'required',
@@ -96,7 +105,6 @@ class PemeriksaanController extends Controller
 
     public function exportWord(Request $request, $id)
     {
-        // 1. Ambil Data Pasien dan Pemeriksaan
         $pemeriksaan = Pemeriksaan::with(['antrian.pasien', 'antrian.dokter'])->findOrFail($id);
         $pasien = $pemeriksaan->antrian->pasien;
         $dokter = $pemeriksaan->antrian->dokter;
@@ -105,24 +113,19 @@ class PemeriksaanController extends Controller
         $tglMulai = Carbon::parse($request->query('tanggal_mulai', now()));
         $tglSelesai = $tglMulai->copy()->addDays($lamaIstirahat - 1);
 
-        // 2. Inisiasi PhpWord
         $phpWord = new PhpWord();
         $section = $phpWord->addSection();
 
-        // 3. Desain KOP Surat (Bisa disesuaikan text/ukurannya)
         $section->addText('KLINIK SEHATI MEDIKA', ['bold' => true, 'size' => 16], ['alignment' => 'center']);
         $section->addText('Jl. Danau Toba No.31, Lingkungan Panji, Tegalgede, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68124', ['size' => 10], ['alignment' => 'center']);
         $section->addText('Telp: 0822-1013-0822', ['size' => 10], ['alignment' => 'center']);
         $section->addText('====================================================', [], ['alignment' => 'center']);
         $section->addTextBreak(1);
 
-        // 4. Judul Surat
         $section->addText('SURAT KETERANGAN SAKIT', ['bold' => true, 'size' => 14, 'underline' => 'single'], ['alignment' => 'center']);
         $section->addTextBreak(1);
 
-        // 5. Isi Surat
         $section->addText('Yang bertanda tangan di bawah ini menerangkan bahwa:', ['size' => 12]);
-
         $section->addText('Nama               : ' . $pasien->nama, ['size' => 12]);
         $section->addText('Umur               : ' . $pasien->umur . ' Tahun', ['size' => 12]);
         $section->addText('Jenis Kelamin      : ' . $pasien->jenis_kelamin, ['size' => 12]);
@@ -135,14 +138,12 @@ class PemeriksaanController extends Controller
         $section->addText('Demikian surat keterangan ini diberikan untuk diketahui dan dapat dipergunakan sebagaimana mestinya.', ['size' => 12]);
         $section->addTextBreak(2);
 
-        // 6. Tanda Tangan
         $section->addText('Dikeluarkan pada tanggal: ' . now()->translatedFormat('d F Y'), ['size' => 12], ['alignment' => 'right']);
         $section->addText('Dokter Pemeriksa,', ['size' => 12], ['alignment' => 'right']);
         $section->addTextBreak(3);
         $section->addText($dokter->nama_dokter, ['bold' => true, 'size' => 12, 'underline' => 'single'], ['alignment' => 'right']);
         $section->addText('SIP: ' . $dokter->no_str, ['size' => 10], ['alignment' => 'right']);
 
-        // 7. Simpan sementara & Download
         $fileName = 'Surat_Sakit_' . str_replace(' ', '_', $pasien->nama) . '.docx';
         $tempFile = storage_path('app/public/' . $fileName);
 
@@ -152,10 +153,51 @@ class PemeriksaanController extends Controller
         return response()->download($tempFile)->deleteFileAfterSend(true);
     }
 
-    // Fungsi Hapus Data
     public function destroy($id)
     {
         Pemeriksaan::destroy($id);
         return redirect()->back();
+    }
+
+    private function generateJadwalMinumObat($pemeriksaanId)
+    {
+        $pemeriksaan = Pemeriksaan::with('resepObats')->find($pemeriksaanId);
+
+        if (!$pemeriksaan || $pemeriksaan->resepObats->isEmpty()) {
+            return;
+        }
+
+        $tanggalMulai = Carbon::today('Asia/Jakarta');
+
+        foreach ($pemeriksaan->resepObats as $resep) {
+            $berapaKali = (int) $resep->berapa_kali; 
+            $berapaHari = (int) $resep->berapa_hari; 
+
+            $plotJam = [];
+            if ($berapaKali === 1) {
+                $plotJam = ['07:00:00']; 
+            } elseif ($berapaKali === 2) {
+                $plotJam = ['07:00:00', '19:00:00']; 
+            } elseif ($berapaKali === 3) {
+                $plotJam = ['07:00:00', '13:00:00', '19:00:00'];  
+            } else {
+                $plotJam = ['07:00:00']; 
+            }
+
+            for ($hari = 0; $hari < $berapaHari; $hari++) {
+                $targetTanggal = $tanggalMulai->copy()->addDays($hari)->toDateString();
+
+                foreach ($plotJam as $jam) {
+                    $datetimeJadwal = Carbon::parse($targetTanggal . ' ' . $jam);
+
+                    JadwalMinumObat::create([
+                        'pemeriksaan_id' => $pemeriksaan->id,
+                        'waktu_jadwal'   => $datetimeJadwal,
+                        'waktu_aktual'   => null,
+                        'status'         => 'belum',
+                    ]);
+                }
+            }
+        }
     }
 }
