@@ -2,7 +2,10 @@ FROM php:8.2-fpm-alpine
 
 # 1. Install ekstensi PHP beserta tools pendukung kompresi untuk Composer & Nginx
 RUN apk add --no-cache nginx supervisor git zip unzip \
-    && docker-php-ext-install pdo pdo_mysql
+    libpng-dev libjpeg-turbo-dev freetype-dev libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql gd zip
+
 
 WORKDIR /var/www/html
 
