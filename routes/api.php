@@ -19,6 +19,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
 
+    Route::get('/mobile/rekam-medis/{antrian_id}', [BookingController::class, 'detailRekamMedis']);
+
     //Get dokter
     Route::get('/mobile/doctors', [BookingController::class, 'listDokter']);
 

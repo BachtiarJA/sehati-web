@@ -96,20 +96,71 @@ class JadwalObatController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
             }
 
-            $antrianHariIni = \DB::table('antrians')->join('dokter', 'antrians.dokter_id', '=', 'dokter.id')->where('antrians.pasien_id', $pasien->id)->whereDate('antrians.tgl_kunjungan', Carbon::today())->orderBy('antrians.jam_kunjungan', 'asc')->select('antrians.*', 'dokter.nama_dokter', 'dokter.keahlian')->get();
-            $visitsPayload = $antrianHariIni->map(function ($visit) { return ['date_label' => 'Hari ini', 'poli' => $visit->keahlian, 'doctor' => $visit->nama_dokter, 'time' => Carbon::parse($visit->jam_kunjungan)->format('H:i'), 'queue_number' => 'No. ' . $visit->no_antrian, 'status' => 'Status: ' . ucfirst($visit->status), 'is_today' => true]; })->toArray();
+            // 💡 Mengunci waktu ke Asia/Jakarta agar sinkron dengan jam HP pas jam 12 malam
+            $hariIniKlinik = Carbon::today('Asia/Jakarta')->toDateString();
 
-            $jadwalObatHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) { $query->where('pasien_id', $pasien->id); })->whereDate('waktu_jadwal', Carbon::today())->orderBy('waktu_jadwal', 'asc')->get();
+            // 1. Ambil data kunjungan hari ini dari database
+            $antrianTable = (new Antrian)->getTable();
+            $antrianHariIni = Antrian::join('dokter', "{$antrianTable}.dokter_id", '=', 'dokter.id')
+                ->where("{$antrianTable}.pasien_id", $pasien->id)
+                ->whereDate("{$antrianTable}.tgl_kunjungan", $hariIniKlinik)
+                ->orderBy("{$antrianTable}.jam_kunjungan", 'asc')
+                ->select("{$antrianTable}.*", 'dokter.nama_dokter', 'dokter.keahlian')
+                ->get();
+
+            $visitsPayload = $antrianHariIni->map(function ($visit) { 
+                return [
+                    'date_label' => 'Hari ini', 
+                    'poli' => $visit->keahlian, 
+                    'doctor' => $visit->nama_dokter, 
+                    'time' => Carbon::parse($visit->jam_kunjungan)->format('H:i'), 
+                    'queue_number' => 'No. ' . $visit->no_antrian, 
+                    'status' => 'Status: ' . ucfirst($visit->status), 
+                    'is_today' => true
+                ]; 
+            })->toArray();
+
+            // 2. Ambil data jadwal konsumsi obat hari ini dari database
+            $jadwalObatHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
+                ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) { 
+                    $query->where('pasien_id', $pasien->id); 
+                })
+                ->whereDate('waktu_jadwal', $hariIniKlinik)
+                ->orderBy('waktu_jadwal', 'asc')
+                ->get();
+
             $medicinesPayload = [];
             foreach ($jadwalObatHariIni as $jadwal) {
                 $timeLabel = Carbon::parse($jadwal->waktu_jadwal)->format('H:i');
                 $statusLabel = $jadwal->status === 'sudah' ? 'Sudah diminum' : ($jadwal->status === 'terlewat' ? 'Terlewat' : 'Belum diverifikasi');
                 foreach ($jadwal->pemeriksaan->resepObats as $resep) {
-                    $medicinesPayload[] = ['time' => $timeLabel, 'medicine_name' => $resep->obat->nama_obat ?? 'Nama Obat', 'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter', 'status' => $statusLabel, 'type' => $resep->obat->jenis ?? 'tablet', 'dose' => $resep->dosis ?? '1 strip', 'description' => $resep->obat->kategori ?? 'Obat resep Klinik Sehati.'];
+                    $medicinesPayload[] = [
+                        'time' => $timeLabel, 
+                        'medicine_name' => $resep->obat->nama_obat ?? 'Nama Obat', 
+                        'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter', 
+                        'status' => $statusLabel, 
+                        'type' => $resep->obat->jenis ?? 'tablet', 
+                        'dose' => $resep->dosis ?? '1 strip', 
+                        'description' => $resep->obat->kategori ?? 'Obat resep Klinik Sehati.'
+                    ];
                 }
             }
 
-            return response()->json(['status' => 'success', 'data' => ['tanggal_hari_ini' => Carbon::now()->locale('id')->translatedFormat('l, d M Y'), 'pasien' => ['nama' => $pasien->nama ?? $user->name], 'ringkasan' => ['total_jadwal_kunjungan' => count($visitsPayload) . ' Jadwal', 'total_jadwal_obat' => count($medicinesPayload) . ' Jadwal'], 'visits' => $visitsPayload, 'medicines' => $medicinesPayload]], 200);
+            // 3. Kirimkan struktur data asli yang sangat dinantikan oleh HomeScreen.dart Flutter
+            return response()->json([
+                'status' => 'success', 
+                'data' => [
+                    'tanggal_hari_ini' => Carbon::now('Asia/Jakarta')->locale('id')->translatedFormat('l, d M Y'), 
+                    'pasien' => ['nama' => $pasien->nama ?? $user->name], 
+                    'ringkasan' => [
+                        'total_jadwal_kunjungan' => count($visitsPayload) . ' Jadwal', 
+                        'total_jadwal_obat' => count($medicinesPayload) . ' Jadwal'
+                    ], 
+                    'visits' => $visitsPayload, 
+                    'medicines' => $medicinesPayload
+                ]
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal memproses beranda: ' . $e->getMessage()], 500);
         }
