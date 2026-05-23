@@ -17,6 +17,8 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
+
     Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
 
     Route::get('/mobile/rekam-medis/{antrian_id}', [BookingController::class, 'detailRekamMedis']);

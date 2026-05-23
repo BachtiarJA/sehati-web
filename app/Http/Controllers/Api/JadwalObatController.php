@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\JadwalMinumObat;
-use App\Models\Antrian; // 💡 Pastikan model Antrian di-import
+use App\Models\Antrian;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class JadwalObatController extends Controller
 {
     /**
-     * Mengambil daftar jadwal minum obat pasien HARI INI
+     * Mengambil daftar jadwal minum obat pasien HARI INI (FIXED TIMEZONE)
      */
     public function hariIni(Request $request)
     {
@@ -21,12 +21,15 @@ class JadwalObatController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
         }
 
+        // 💡 FIX 1: Kunci timezone Asia/Jakarta agar sinkron dengan kalender asli di HP pasien
+        $hariIniKlinik = Carbon::today('Asia/Jakarta')->toDateString();
+
         // Cari jadwal HARI INI milik pasien tersebut
         $jadwalHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
             ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
                 $query->where('pasien_id', $pasien->id);
             })
-            ->whereDate('waktu_jadwal', Carbon::today())
+            ->whereDate('waktu_jadwal', $hariIniKlinik)
             ->orderBy('waktu_jadwal', 'asc')
             ->get();
 
@@ -38,10 +41,10 @@ class JadwalObatController extends Controller
 
             return [
                 'id_jadwal' => $jadwal->id,
-                'jam_minum' => $jadwal->waktu_jadwal->format('H:i'), 
+                'jam_minum' => Carbon::parse($jadwal->waktu_jadwal)->format('H:i'), 
                 'daftar_obat' => $daftarObat, 
                 'status' => $jadwal->status, 
-                'waktu_diminum' => $jadwal->waktu_aktual ? $jadwal->waktu_aktual->format('H:i') : null,
+                'waktu_diminum' => $jadwal->waktu_aktual ? Carbon::parse($jadwal->waktu_aktual)->format('H:i') : null,
             ];
         });
 
@@ -53,7 +56,7 @@ class JadwalObatController extends Controller
     }
 
     /**
-     * Memproses ketika pasien menekan tombol "SAYA SUDAH MINUM"
+     * Memproses ketika pasien menekan tombol "SAYA SUDAH MINUM" secara manual (FIXED TIMEZONE)
      */
     public function tandaiSudahMinum(Request $request, $id_jadwal)
     {
@@ -71,15 +74,16 @@ class JadwalObatController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Obat ini sudah ditandai diminum sebelumnya.'], 400);
         }
 
+        // 💡 FIX 2: Samakan format pencatatan waktu dengan verifikasiObat MediaPipe (Asia/Jakarta)
         $jadwal->update([
             'status' => 'sudah',
-            'waktu_aktual' => now() 
+            'waktu_aktual' => Carbon::now('Asia/Jakarta')->toDateTimeString() 
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Hebat! Anda telah meminum obat tepat waktu.',
-            'waktu_diminum' => $jadwal->waktu_aktual->format('H:i')
+            'waktu_diminum' => Carbon::parse($jadwal->waktu_aktual)->format('H:i')
         ], 200);
     }
 
@@ -96,7 +100,6 @@ class JadwalObatController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
             }
 
-            // 💡 Mengunci waktu ke Asia/Jakarta agar sinkron dengan jam HP pas jam 12 malam
             $hariIniKlinik = Carbon::today('Asia/Jakarta')->toDateString();
 
             // 1. Ambil data kunjungan hari ini dari database
@@ -146,7 +149,6 @@ class JadwalObatController extends Controller
                 }
             }
 
-            // 3. Kirimkan struktur data asli yang sangat dinantikan oleh HomeScreen.dart Flutter
             return response()->json([
                 'status' => 'success', 
                 'data' => [
@@ -167,7 +169,7 @@ class JadwalObatController extends Controller
     }
 
     /**
-     * 💾 FIXED: Mengambil data Riwayat Kunjungan dan Obat menggunakan FULL ELOQUENT ORM (Anti Error 500)
+     * Mengambil data Riwayat Kunjungan dan Obat (FIXED RELATION & TIMEZONE)
      */
     public function riwayatMobile(Request $request)
     {
@@ -179,15 +181,13 @@ class JadwalObatController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Profil pasien tidak ditemukan.'], 404);
             }
 
-            $hariIni = Carbon::today()->toDateString();
-            $waktuSekarang = Carbon::now();
+            // 💡 FIX 3: Amankan zona waktu pencarian masa lalu agar selaras dengan jam lokal Indonesia
+            $hariIni = Carbon::today('Asia/Jakarta')->toDateString();
+            $waktuSekarang = Carbon::now('Asia/Jakarta');
 
-            // 💡 Deteksi nama tabel Antrian asli secara dinamis dari Model (mengantisipasi singular/plural)
             $antrianTable = (new Antrian)->getTable();
 
-            // =========================================================================
-            // 1. QUERY RIWAYAT KUNJUNGAN (Menggunakan Model Antrian + Join Dokter)
-            // =========================================================================
+            // 1. QUERY RIWAYAT KUNJUNGAN
             $kunjunganMasaLalu = Antrian::join('dokter', "{$antrianTable}.dokter_id", '=', 'dokter.id')
                 ->where("{$antrianTable}.pasien_id", $pasien->id)
                 ->where(function ($query) use ($hariIni, $antrianTable) {
@@ -218,10 +218,9 @@ class JadwalObatController extends Controller
                 ];
             });
 
-            // =========================================================================
-            // 2. QUERY RIWAYAT OBAT (Full Jalur Aman Mengikuti Fungsi hariIni)
-            // =========================================================================
-            $obatMasaLalu = JadwalMinumObat::with('pemeriksaan.resepObats.obtain')
+            // 2. QUERY RIWAYAT OBAT 
+            // 💡 FIX 4: Mengubah relasi typo '.obtain' menjadi '.obat' agar terhindar dari Error 500
+            $obatMasaLalu = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
                 ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
                     $query->where('pasien_id', $pasien->id);
                 })
@@ -234,7 +233,6 @@ class JadwalObatController extends Controller
                 $waktuJadwalFormated = Carbon::parse($jadwal->waktu_jadwal)->translatedFormat('d M Y, H:i') . ' WIB';
                 $waktuDiminumFormated = $jadwal->waktu_aktual ? Carbon::parse($jadwal->waktu_aktual)->format('H:i') . ' WIB' : '-';
                 
-                // Sinkronisasi status string agar dibaca valid oleh UI riwayat mobile
                 $statusLabel = 'Terlewat';
                 if ($jadwal->status === 'sudah') $statusLabel = 'Diminum';
                 if ($jadwal->status === 'belum') $statusLabel = 'Belum Verifikasi';
@@ -254,9 +252,6 @@ class JadwalObatController extends Controller
                 }
             }
 
-            // =========================================================================
-            // 3. ENCAPSULATE JSON RESPONS
-            // =========================================================================
             return response()->json([
                 'status' => 'success',
                 'message' => 'Seluruh data riwayat berhasil diambil secara riil',
@@ -268,6 +263,48 @@ class JadwalObatController extends Controller
 
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => 'Gagal memproses riwayat: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Verifikasi Kepatuhan Minum Obat via MediaPipe Mobile
+     */
+    public function verifikasiObat(Request $request)
+    {
+        $request->validate([
+            'jadwal_id' => 'required|exists:jadwal_minum_obats,id',
+        ]);
+
+        try {
+            $jadwal = JadwalMinumObat::findOrFail($request->jadwal_id);
+
+            if ($jadwal->status === 'sudah') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Jadwal obat ini sudah berhasil diverifikasi sebelumnya.'
+                ], 400);
+            }
+
+            $jadwal->update([
+                'status' => 'sudah',
+                'waktu_aktual' => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Verifikasi MediaPipe berhasil dicatat! Status kepatuhan obat terupdate.',
+                'data' => [
+                    'jadwal_id' => $jadwal->id,
+                    'status_terbaru' => $jadwal->status,
+                    'waktu_minum' => Carbon::parse($jadwal->waktu_aktual)->locale('id')->translatedFormat('H:i \W\I\B, d M Y'),
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan verifikasi obat ke server: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
