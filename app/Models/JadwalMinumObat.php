@@ -18,6 +18,6 @@ class JadwalMinumObat extends Model
 
     public function pemeriksaan()
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan');
+        return $this->belongsTo(Pemeriksaan::class, 'pemeriksaan_id');
     }
 }

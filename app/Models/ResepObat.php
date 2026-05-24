@@ -13,7 +13,7 @@ class ResepObat extends Model
 
     public function obat()
     {
-        return $this->belongsTo(Obat::class, 'id_obat');
+        return $this->belongsTo(Obat::class, 'obat_id');
     }
 
     public function pasien()
@@ -23,6 +23,6 @@ class ResepObat extends Model
 
     public function pemeriksaan() 
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan');
+        return $this->belongsTo(Pemeriksaan::class, 'pemeriksaan_id');
     }
 }

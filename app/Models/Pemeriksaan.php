@@ -19,12 +19,12 @@ class Pemeriksaan extends Model
     public function resepObats()
     {
         // 🟢 PERBAIKAN: Tambahkan 'id_pemeriksaan' agar sinkron dengan file ResepObat.php
-        return $this->hasMany(ResepObat::class, 'id_pemeriksaan');
+        return $this->hasMany(ResepObat::class, 'pemeriksaan_id');
     }
 
     public function jadwalMinumObats()
     {
         // 1 Pemeriksaan memiliki banyak Jadwal Minum Obat
-        return $this->hasMany(JadwalMinumObat::class, 'id_pemeriksaan');
+        return $this->hasMany(JadwalMinumObat::class, 'pemeriksaan_id');
     }
 }
