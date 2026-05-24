@@ -102,7 +102,7 @@ class JadwalObatController extends Controller
 
             $hariIniKlinik = Carbon::today('Asia/Jakarta')->toDateString();
 
-            // 1. Ambil data kunjungan hari ini
+            // 1. Ambil data kunjungan hari ini dari database
             $antrianTable = (new Antrian)->getTable();
             $antrianHariIni = Antrian::join('dokter', "{$antrianTable}.dokter_id", '=', 'dokter.id')
                 ->where("{$antrianTable}.pasien_id", $pasien->id)
@@ -123,7 +123,7 @@ class JadwalObatController extends Controller
                 ]; 
             })->toArray();
 
-            // 2. Ambil data jadwal lewat JEMBATAN RELASI Eloquent
+            // 2. Ambil data jadwal konsumsi obat hari ini dari database
             $jadwalObatHariIni = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
                 ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) { 
                     $query->where('pasien_id', $pasien->id); 
@@ -132,15 +132,14 @@ class JadwalObatController extends Controller
                 ->orderBy('waktu_jadwal', 'asc')
                 ->get();
 
-            // 3. Proses Merakit Grouping Array sesuai Konsep Lann
+            // 3. Proses Merakit Grouping Array tanpa crash property on null
             $medicinesPayload = $jadwalObatHariIni->map(function ($jadwal) {
                 $timeLabel = Carbon::parse($jadwal->waktu_jadwal)->format('H:i');
                 $statusLabel = $jadwal->status === 'sudah' ? 'Sudah diminum' : ($jadwal->status === 'terlewat' ? 'Terlewat' : 'Belum diverifikasi');
                 
-                // Mengambil list resep obat yang bernaung di bawah id_pemeriksaan yang sama
                 $daftarObat = $jadwal->pemeriksaan->resepObats->map(function ($resep) {
                     return [
-                        'nama_obat' => $resep->obat->nama_obat ?? 'Nama Obat', 
+                        'nama_obat' => $resep->obat->nama_obat ?? 'Nama Obat', // 🟢 KOREKSI: Relasi murni ke 'obat'
                         'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter', 
                         'type' => $resep->obat->jenis ?? 'tablet', 
                         'dose' => $resep->dosis ?? '1 tablet', 
@@ -149,10 +148,10 @@ class JadwalObatController extends Controller
                 })->toArray();
 
                 return [
-                    'id' => $jadwal->id, // ID tunggal jadwal pengunci grup (Angka 29)
+                    'id' => $jadwal->id,
                     'time' => $timeLabel, 
                     'status' => $statusLabel, 
-                    'daftar_obat' => $daftarObat // Sub-array isi obat banyak sekaligus
+                    'daftar_obat' => $daftarObat
                 ];
             })->toArray();
 
@@ -166,7 +165,7 @@ class JadwalObatController extends Controller
                         'total_jadwal_obat' => count($medicinesPayload) . ' Jadwal'
                     ], 
                     'visits' => $visitsPayload, 
-                    'medicines' => $medicinesPayload // JSON rapi siap dilalap Flutter
+                    'medicines' => $medicinesPayload
                 ]
             ], 200);
 
