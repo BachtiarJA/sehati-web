@@ -52,7 +52,7 @@ class BookingController extends Controller
                 $jamMulai = Carbon::parse($jadwal->jam_mulai)->format('H:i');
                 $jamSelesai = Carbon::parse($jadwal->jam_selesai)->format('H:i');
                 // 🟢 Ambil data durasi pasien dari baris jadwal kerja dokter
-                $durasiPasien = $jadwal->durasi_pasien ?? '30 Menit'; 
+                $durasiPasien = $jadwal->durasi_per_pasien ?? '30 Menit'; 
             } else {
                 $jamMulai = 'Libur';
                 $jamSelesai = '';
@@ -66,7 +66,7 @@ class BookingController extends Controller
                 'jam_mulai' => $jamMulai,     
                 'jam_selesai' => $jamSelesai, 
                 'estimasi_antrean' => $estimasiAntrean,
-                'durasi_pasien' => $durasiPasien // 🟢 TAMBAHKAN BARIS INI (Data dikirim ke Flutter)
+                'durasi_per_pasien' => $durasiPasien
             ];
         });
 
