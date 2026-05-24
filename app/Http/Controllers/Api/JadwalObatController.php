@@ -138,8 +138,9 @@ class JadwalObatController extends Controller
                 $statusLabel = $jadwal->status === 'sudah' ? 'Sudah diminum' : ($jadwal->status === 'terlewat' ? 'Terlewat' : 'Belum diverifikasi');
                 foreach ($jadwal->pemeriksaan->resepObats as $resep) {
                     $medicinesPayload[] = [
+                        'id' => $jadwal->id, // 🟢 FIXX!! Sekarang ID jadwal rill database ikut dikirim ke Flutter
                         'time' => $timeLabel, 
-                        'medicine_name' => $resep->obat->nama_obat ?? 'Nama Obat', 
+                        'medicine_name' => $resep->obtain->nama_obat ?? $resep->obat->nama_obat ?? 'Nama Obat', 
                         'instruction' => $resep->keterangan ?? 'Diminum sesuai aturan dokter', 
                         'status' => $statusLabel, 
                         'type' => $resep->obat->jenis ?? 'tablet', 
@@ -219,7 +220,6 @@ class JadwalObatController extends Controller
             });
 
             // 2. QUERY RIWAYAT OBAT 
-            // 💡 FIX 4: Mengubah relasi typo '.obtain' menjadi '.obat' agar terhindar dari Error 500
             $obatMasaLalu = JadwalMinumObat::with('pemeriksaan.resepObats.obat')
                 ->whereHas('pemeriksaan.antrian', function ($query) use ($pasien) {
                     $query->where('pasien_id', $pasien->id);
