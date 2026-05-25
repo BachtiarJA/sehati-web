@@ -169,34 +169,44 @@ class PemeriksaanController extends Controller
 
         $tanggalMulai = Carbon::today('Asia/Jakarta');
 
+        // 1. Cari durasi hari terlama dari semua obat yang diresepkan
+        $maxHari = $pemeriksaan->resepObats->max('berapa_hari') ?? 1;
+
+        // 2. Kumpulkan seluruh plot jam dari semua obat ke dalam satu wadah
+        $allPlotJam = [];
         foreach ($pemeriksaan->resepObats as $resep) {
             $berapaKali = (int) $resep->berapa_kali; 
-            $berapaHari = (int) $resep->berapa_hari; 
 
-            $plotJam = [];
             if ($berapaKali === 1) {
-                $plotJam = ['07:00:00']; 
+                $allPlotJam[] = '07:00:00'; 
             } elseif ($berapaKali === 2) {
-                $plotJam = ['07:00:00', '19:00:00']; 
+                $allPlotJam[] = '07:00:00'; 
+                $allPlotJam[] = '19:00:00'; 
             } elseif ($berapaKali === 3) {
-                $plotJam = ['07:00:00', '13:00:00', '19:00:00'];  
+                $allPlotJam[] = '07:00:00'; 
+                $allPlotJam[] = '13:00:00'; 
+                $allPlotJam[] = '19:00:00';  
             } else {
-                $plotJam = ['07:00:00']; 
+                $allPlotJam[] = '07:00:00'; 
             }
+        }
 
-            for ($hari = 0; $hari < $berapaHari; $hari++) {
-                $targetTanggal = $tanggalMulai->copy()->addDays($hari)->toDateString();
+        // 💡 KUNCI UTAMA: Saring agar plot jam benar-benar unik (tidak ada jam 07:00 atau 19:00 ganda)
+        $uniquePlotJam = array_unique($allPlotJam);
 
-                foreach ($plotJam as $jam) {
-                    $datetimeJadwal = Carbon::parse($targetTanggal . ' ' . $jam);
+        // 3. Masukkan ke database secara steril (Satu slot jam untuk semua obat di hari tersebut)
+        for ($hari = 0; $hari < $maxHari; $hari++) {
+            $targetTanggal = $tanggalMulai->copy()->addDays($hari)->toDateString();
 
-                    JadwalMinumObat::create([
-                        'pemeriksaan_id' => $pemeriksaan->id,
-                        'waktu_jadwal'   => $datetimeJadwal,
-                        'waktu_aktual'   => null,
-                        'status'         => 'belum',
-                    ]);
-                }
+            foreach ($uniquePlotJam as $jam) {
+                $datetimeJadwal = Carbon::parse($targetTanggal . ' ' . $jam);
+
+                JadwalMinumObat::create([
+                    'pemeriksaan_id' => $pemeriksaan->id,
+                    'waktu_jadwal'   => $datetimeJadwal,
+                    'waktu_aktual'   => null,
+                    'status'         => 'belum',
+                ]);
             }
         }
     }
