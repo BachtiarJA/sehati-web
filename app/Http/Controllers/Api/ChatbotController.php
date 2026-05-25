@@ -33,7 +33,7 @@ class ChatbotController extends Controller
             . "Pertanyaan pengguna: " . $userMessage;
 
         try {
-            // 3. Ambil respon langsung dari model Gemini 1.5 Flash
+            // Tembak API Gemini menggunakan model Flash yang responsif
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
                 'contents' => [
                     [
@@ -43,14 +43,13 @@ class ChatbotController extends Controller
                     ]
                 ],
                 'generationConfig' => [
-                    'temperature' => 0.2, // Mengunci kreativitas AI agar patuh pada aturan teks di atas
+                    'temperature' => 0.2
                 ]
             ]);
 
             $result = $response->json();
             $botReply = $result['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
-            // Jika respon dari Gemini kosong atau gagal parsing, lempar ke fallback manual
             if (!$botReply) {
                 $botReply = "Maaf, saya belum memahami pertanyaan tersebut. Silakan hubungi nomor administrasi Klinik Sehati Medika di 0822-1013-0822.";
             }
