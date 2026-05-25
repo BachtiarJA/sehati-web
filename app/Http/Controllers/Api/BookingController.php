@@ -39,7 +39,7 @@ class BookingController extends Controller
 
         $daftarDokter = $query->get();
 
-        $dataDokterResponse = $daftarDokter->map(function ($doc) use ($tanggal, $namaHari) {
+        $dataDokterResponse = $daftarDokter->map(function ($doc) use ($tanggal, $namaHari, $pasien) {
             
             $estimasiAntrean = Antrian::where('dokter_id', $doc->id)
                 ->whereDate('tgl_kunjungan', $tanggal)
