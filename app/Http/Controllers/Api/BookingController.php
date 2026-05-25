@@ -26,6 +26,9 @@ class BookingController extends Controller
 
         $namaHari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
 
+        $user = $request->user();
+        $pasien = $user ? $user->pasien : null;
+
         $query = Dokter::query();
 
         if ($layanan === 'khitan') {
@@ -61,6 +64,15 @@ class BookingController extends Controller
                 $durasiPasien = '30 Menit'; // Fallback aman jika dokter libur
             }
 
+            $sudahBooking = false;
+            if ($pasien) {
+                $sudahBooking = Antrian::where('pasien_id', $pasien->id)
+                    ->where('dokter_id', $doc->id)
+                    ->whereDate('tgl_kunjungan', $tanggal)
+                    ->where('status', 'menunggu')
+                    ->exists();
+            }
+
             return [
                 'id' => $doc->id,
                 'nama' => $doc->nama_dokter, 
@@ -68,9 +80,8 @@ class BookingController extends Controller
                 'jam_mulai' => $jamMulai,     
                 'jam_selesai' => $jamSelesai, 
                 'estimasi_antrean' => $estimasiAntrean,
-                
-                // 🟢 SINKRONISASI KEY: Gunakan 'durasi_pasien' agar terbaca sempurna oleh Flutter Langkah 2
-                'durasi_pasien' => $durasiPasien
+                'durasi_pasien' => $durasiPasien,
+                'sudah_booking' => $sudahBooking
             ];
         });
 
