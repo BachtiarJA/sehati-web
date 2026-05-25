@@ -12,12 +12,14 @@ use App\Http\Controllers\Api\DokterController;
 // ===========================================
 Route::post('/mobile/login', [AuthController::class, 'login']);
 
+Route::post('/chatbot', [ChatbotController::class, 'chat']);
+
 // ===========================================
 // RUTE PRIVATE (HANYA BISA DIAKSES JIKA ADA BEARER TOKEN)
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('/chatbot', [ChatbotController::class, 'chat']);
+    
 
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
 
