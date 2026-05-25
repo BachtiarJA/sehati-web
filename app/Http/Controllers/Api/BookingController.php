@@ -154,6 +154,7 @@ class BookingController extends Controller
         $request->validate([
             'dokter_id' => 'required|exists:dokter,id',
             'tgl_kunjungan' => 'required|date',
+            'jam_kunjungan' => 'required', // 🟢 Validasi input jam dari Flutter
         ]);
 
         $user = $request->user();
@@ -184,12 +185,20 @@ class BookingController extends Controller
                 $tanggal = Carbon::parse($request->tgl_kunjungan)->toDateString();
                 $namaHari = Carbon::parse($tanggal)->locale('id')->translatedFormat('l');
 
-                $jadwal = DB::table('jadwal_dokters')
-                    ->where('dokter_id', $request->dokter_id)
-                    ->where('hari', 'like', '%' . $namaHari . '%')
-                    ->first();
+                // 🟢 Ambil jam pilihan pasien
+                $jamInput = $request->jam_kunjungan;
+                
+                // Fallback aman jika seandainya data kosong
+                if (!$jamInput) {
+                    $jadwal = DB::table('jadwal_dokters')
+                        ->where('dokter_id', $request->dokter_id)
+                        ->where('hari', 'like', '%' . $namaHari . '%')
+                        ->first();
+                    $jamInput = $jadwal ? $jadwal->jam_mulai : '08:00:00';
+                }
 
-                $jamKunjungan = $jadwal ? $jadwal->jam_mulai : '08:00:00';
+                // Format agar aman masuk ke tipe data TIME MySQL (HH:mm:ss)
+                $jamKunjungan = Carbon::parse($jamInput)->toTimeString();
 
                 $latestNoAntrian = Antrian::where('dokter_id', $request->dokter_id)
                     ->whereDate('tgl_kunjungan', $tanggal)
@@ -201,7 +210,7 @@ class BookingController extends Controller
                     'pasien_id' => $pasien->id,
                     'dokter_id' => $request->dokter_id,
                     'tgl_kunjungan' => $tanggal,
-                    'jam_kunjungan' => $jamKunjungan,
+                    'jam_kunjungan' => $jamKunjungan, // 🟢 Sekarang murni menyimpan jam pilihan pasien (e.g. 11:30:00)
                     'no_antrian' => $noAntrianBaru,
                     'status' => 'menunggu'
                 ]);
@@ -215,7 +224,7 @@ class BookingController extends Controller
                         'jam_kunjungan' => Carbon::parse($antrian->jam_kunjungan)->format('H:i') . ' WIB'
                     ]
                 ], 201);
-            });
+        });
 
         } catch (\Exception $e) {
             return response()->json([
