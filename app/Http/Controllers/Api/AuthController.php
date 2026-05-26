@@ -36,19 +36,19 @@ class AuthController extends Controller
         DB::beginTransaction();
 
         try {
-            // A. Buat data akun di tabel users
+    // A. Buat data akun di tabel users
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'pasien', // 🔥 KUNCI: Wajib otomatis diset sebagai pasien agar bisa login mobile
+                'role' => 'pasien',
             ]);
 
-            // B. Buat data profil kosong pendukung di tabel pasien yang berelasi dengan user_id
+            // B. Buat data profil di tabel pasien
             $pasien = Pasien::create([
                 'user_id' => $user->id,
-                // Kolom lain seperti nik, no_telepon, alamat dibiarkan kosong/nullable dulu 
-                // untuk diisi nanti di halaman edit profil.
+                'nama' => $request->name, // 🔥 SUNTIKKAN BARIS INI AGAR DATABASE KAMU TIDAK PROTES!
+                // Kolom lain seperti nik, no_telepon biarkan kosong dulu
             ]);
 
             DB::commit(); // Kunci perubahan ke database jika keduanya sukses
