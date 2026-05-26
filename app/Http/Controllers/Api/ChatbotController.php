@@ -21,29 +21,32 @@ class ChatbotController extends Controller
         $apiKey = env('GEMINI_API_KEY');
         $userMessage = $request->pesan;
 
-        // 2. Teks pagar pembatas instruksi sistem yang super ketat
-        $systemInstruction = "Kamu adalah SehatiBot, asisten medis pintar untuk aplikasi pengingat obat Sehati dan Klinik Sehati Medika. "
-            . "Tugasmu HANYA menjawab pertanyaan seputar kesehatan "
-            . ""
-            . "⚠️ ATURAN MUTLAK:/n"
-            . "Jika pertanyaan pengguna berada di luar konteks dan tidak ada hubungannya dengan kesehatan "
-            . "(misalnya bertanya tentang kodingan pemrograman, matematika, resep makanan umum, politik, gosip selebriti, lelucon umum, atau hal di luar medis lainnya), "
-            . "kamu WAJIB menjawab HANYA dengan kalimat ini secara utuh tanpa ada tambahan kata atau karakter lain:\n"
-            . "Maaf, saya belum memahami pertanyaan tersebut. Silakan hubungi nomor administrasi Klinik Sehati Medika di 0822-1013-0822.\n\n"
-            . "Pertanyaan pengguna: " . $userMessage;
+        // 2. Teks pagar pembatas murni tanpa dicampur pesan user
+        $promptSistem = "Kamu adalah SehatiBot, asisten medis pintar untuk aplikasi pengingat obat Sehati dan Klinik Sehati Medika. "
+            . "Tugasmu HANYA menjawab pertanyaan seputar kesehatan, gejala penyakit, obat-obatan, dan pertolongan pertama.\n\n"
+            . "⚠️ ATURAN MUTLAK:\n"
+            . "Jika pertanyaan pengguna berada di luar konteks medis atau kesehatan "
+            . "(misalnya tentang kodingan pemrograman, matematika, politik, lelucon umum, atau hal non-medis lainnya), "
+            . "kamu WAJIB menjawab HANYA dengan kalimat ini secara utuh tanpa tambahan kata lain:\n"
+            . "Maaf, saya belum memahami pertanyaan tersebut. Silakan hubungi nomor administrasi Klinik Sehati Medika di 0822-1013-0822.";
 
         try {
-            // Tembak API Gemini menggunakan model Flash yang responsif
+            // 🔥 PERBAIKAN UTAMA: Pisahkan systemInstruction dan contents sesuai dokumentasi resmi Gemini
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
+                'systemInstruction' => [
+                    'parts' => [
+                        ['text' => $promptSistem]
+                    ]
+                ],
                 'contents' => [
                     [
                         'parts' => [
-                            ['text' => $systemInstruction]
+                            ['text' => $userMessage] // Pesan user berdiri sendiri di sini
                         ]
                     ]
                 ],
                 'generationConfig' => [
-                    'temperature' => 1.0
+                    'temperature' => 0.4 // ⚡ Diturunkan agar AI konsisten dan patuh pada aturan
                 ]
             ]);
 
