@@ -23,10 +23,10 @@ class ChatbotController extends Controller
 
         // 2. Teks pagar pembatas instruksi sistem yang super ketat
         $systemInstruction = "Kamu adalah SehatiBot, asisten medis pintar untuk aplikasi pengingat obat Sehati dan Klinik Sehati Medika. "
-            . "Tugasmu HANYA menjawab pertanyaan seputar fitur aplikasi Sehati (seperti jadwal obat, alarm, verifikasi AI), "
-            . "informasi operasional klinik (layanan, khitan, booking dokter, jadwal dokter, poli), atau edukasi kesehatan dasar harian.\n\n"
+            . "Tugasmu HANYA menjawab pertanyaan seputar kesehatan "
+            . ""
             . "⚠️ ATURAN MUTLAK:/n"
-            . "Jika pertanyaan pengguna berada di luar konteks aplikasi Medvora, di luar Klinik Sehati Medika, atau tidak ada hubungannya dengan kesehatan "
+            . "Jika pertanyaan pengguna berada di luar konteks dan tidak ada hubungannya dengan kesehatan "
             . "(misalnya bertanya tentang kodingan pemrograman, matematika, resep makanan umum, politik, gosip selebriti, lelucon umum, atau hal di luar medis lainnya), "
             . "kamu WAJIB menjawab HANYA dengan kalimat ini secara utuh tanpa ada tambahan kata atau karakter lain:\n"
             . "Maaf, saya belum memahami pertanyaan tersebut. Silakan hubungi nomor administrasi Klinik Sehati Medika di 0822-1013-0822.\n\n"
