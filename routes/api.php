@@ -16,6 +16,8 @@ Route::post('/mobile/login', [AuthController::class, 'login']);
 
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
 
+Route::get('/user-profile', [ProfileController::class, 'index']);
+
 // ===========================================
 // RUTE PRIVATE (HANYA BISA DIAKSES JIKA ADA BEARER TOKEN)
 // ===========================================
@@ -54,6 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::post('/mobile/minum-obat/{id_jadwal}', [JadwalObatController::class, 'tandaiSudahMinum']);
 
-    Route::get('/user-profile', [ProfileController::class, 'index']);
+    
 
 });
