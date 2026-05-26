@@ -21,7 +21,7 @@ Route::post('/chatbot', [ChatbotController::class, 'chat']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/user-profile', [ProfileController::class, 'index']);
+    
 
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
 
@@ -53,5 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     
     Route::post('/mobile/minum-obat/{id_jadwal}', [JadwalObatController::class, 'tandaiSudahMinum']);
+
+    Route::get('/user-profile', [ProfileController::class, 'index']);
 
 });
