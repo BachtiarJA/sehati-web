@@ -14,14 +14,14 @@ use App\Http\Controllers\Api\ProfileController;
 // ===========================================
 Route::post('/mobile/login', [AuthController::class, 'login']);
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
-
+Route::post('/mobile/register', [AuthController::class, 'register']);
 
 // ===========================================
 // RUTE PRIVATE (HANYA BISA DIAKSES JIKA ADA BEARER TOKEN)
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::post('/mobile/register', [AuthController::class, 'register']);
+    
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
     Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
     Route::get('/mobile/rekam-medis/{antrian_id}', [BookingController::class, 'detailRekamMedis']);
