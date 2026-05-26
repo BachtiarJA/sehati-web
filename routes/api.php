@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\DokterController;
 use App\Http\Controllers\Api\ChatbotController;
+use App\Http\Controllers\API\ProfileController;
 
 // ===========================================
 // RUTE PUBLIK (Tidak butuh Token)
@@ -20,7 +21,7 @@ Route::post('/chatbot', [ChatbotController::class, 'chat']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    
+    Route::get('/user-profile', [ProfileController::class, 'index']);
 
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
 
