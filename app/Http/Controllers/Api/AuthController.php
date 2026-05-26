@@ -16,69 +16,72 @@ class AuthController extends Controller
      * FUNGSI REGISTER PASIEN BARU VIA MOBILE
      */
     public function register(Request $request)
-    {
-        // 1. Validasi input pendaftaran
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
+{
+    // 1. Validasi input (Sertakan 3 kolom baru dari Flutter)
+    $validator = Validator::make($request->all(), [
+        'name'          => 'required|string|max:255',
+        'email'         => 'required|string|email|max:255|unique:users',
+        'password'      => 'required|string|min:6',
+        'jenis_kelamin' => 'required|string',
+        'umur'          => 'required|integer',
+        'alamat'        => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Pendaftaran gagal, validasi tidak terpenuhi',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    DB::beginTransaction();
+
+    try {
+        // A. Buat data akun di tabel users
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => 'pasien', 
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Pendaftaran gagal, validasi tidak terpenuhi',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // B. Buat data profil di tabel pasiens (Menangkap data dinamis dari Request)
+        $pasien = Pasien::create([
+            'user_id'       => $user->id,
+            'nama'          => $request->name,
+            'jenis_kelamin' => $request->jenis_kelamin, // ← Dinamis
+            'umur'          => $request->umur,          // ← Dinamis
+            'alamat'        => $request->alamat,        // ← Dinamis
+        ]);
 
-        // 2. Gunakan Transaction agar jika salah satu tabel gagal dimasuki, database di-rollback
-        DB::beginTransaction();
+        DB::commit();
 
-        try {
-    // A. Buat data akun di tabel users
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'pasien',
-            ]);
+        $token = $user->createToken('MobileAppToken')->plainTextToken;
 
-            // B. Buat data profil di tabel pasien
-            $pasien = Pasien::create([
-                'user_id' => $user->id,
-                'nama' => $request->name, // 🔥 SUNTIKKAN BARIS INI AGAR DATABASE KAMU TIDAK PROTES!
-                // Kolom lain seperti nik, no_telepon biarkan kosong dulu
-            ]);
-
-            DB::commit(); // Kunci perubahan ke database jika keduanya sukses
-
-            // 3. Otomatis buatkan Token Sanctum (Auto-Login setelah register)
-            $token = $user->createToken('MobileAppToken')->plainTextToken;
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pendaftaran pasien baru berhasil!',
-                'data' => [
-                    'token' => $token,
-                    'user' => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'pasien_id' => $pasien->id
-                    ]
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pendaftaran pasien baru berhasil!',
+            'data' => [
+                'token' => $token,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'pasien_id' => $pasien->id
                 ]
-            ], 201);
+            ]
+        ], 201);
 
-        } catch (\Exception $e) {
-            DB::rollBack(); // Batalkan semua pembuatan jika ada database yang crash
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan sistem saat registrasi.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan sistem saat registrasi.',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * FUNGSI LOGIN PASIEN
