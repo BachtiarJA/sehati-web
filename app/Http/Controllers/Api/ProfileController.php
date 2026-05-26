@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Kunjungan; 
-use App\Models\Obat; 
+use App\Models\Antrian; // ✅ Menggunakan model Antrian sebagai Kunjungan
+use App\Models\JadwalMinumObat; // ✅ Menggunakan model JadwalMinumObat sebagai data Obat
 
 class ProfileController extends Controller
 {
@@ -26,11 +26,42 @@ class ProfileController extends Controller
                 return response()->json(['message' => 'User tidak ditemukan.'], 404);
             }
 
-            // 2. Query Hitung Statistik Riil (Hanya Kunjungan dan Obat)
-            $kunjunganCount = Kunjungan::where('user_id', $user->id)->count();
-            $obatCount = Obat::where('user_id', $user->id)->count(); 
+            // Ambil ID Pasien jika ada relasinya di model User kalian
+            $pasienId = $user->pasien ? $user->pasien->id : null;
 
-            // 3. Return Response JSON
+            // ==========================================
+            // 2. HITUNG STATISTIK KUNJUNGAN (Model: Antrian)
+            // ==========================================
+            try {
+                // Coba hitung berdasarkan user_id terlebih dahulu
+                $kunjunganCount = Antrian::where('user_id', $user->id)->count();
+            } catch (\Exception $e) {
+                try {
+                    // Jika kolom user_id tidak ada, switch otomatis ke pasien_id
+                    $kunjunganCount = $pasienId ? Antrian::where('pasien_id', $pasienId)->count() : 0;
+                } catch (\Exception $ex) {
+                    $kunjunganCount = 0; // Perlindungan terakhir jika kedua kolom tidak ada
+                }
+            }
+
+            // ==========================================
+            // 3. HITUNG STATISTIK OBAT (Model: JadwalMinumObat)
+            // ==========================================
+            try {
+                // Coba hitung berdasarkan user_id
+                $obatCount = JadwalMinumObat::where('user_id', $user->id)->count();
+            } catch (\Exception $e) {
+                try {
+                    // Jika kolom user_id tidak ada, switch otomatis ke pasien_id
+                    $obatCount = $pasienId ? JadwalMinumObat::where('pasien_id', $pasienId)->count() : 0;
+                } catch (\Exception $ex) {
+                    $obatCount = 0;
+                }
+            }
+
+            // ==========================================
+            // 4. RETURN RESPONSE JSON KE FLUTTER
+            // ==========================================
             return response()->json([
                 'name' => $user->name,
                 'email' => $user->email,
