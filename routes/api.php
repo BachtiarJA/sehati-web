@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\DokterController;
 use App\Http\Controllers\Api\ChatbotController;
-use App\Http\Controllers\API\ProfileController;
+use App\Http\Controllers\Api\ProfileController;
 
 // ===========================================
 // RUTE PUBLIK (Tidak butuh Token)
