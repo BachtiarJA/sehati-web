@@ -21,6 +21,7 @@ Route::post('/chatbot', [ChatbotController::class, 'chat']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::post('/mobile/register', [AuthController::class, 'register']);
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
     Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
     Route::get('/mobile/rekam-medis/{antrian_id}', [BookingController::class, 'detailRekamMedis']);
