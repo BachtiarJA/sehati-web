@@ -43,7 +43,7 @@ class ChatbotController extends Controller
                     ]
                 ],
                 'generationConfig' => [
-                    'temperature' => 0.2
+                    'temperature' => 1.0
                 ]
             ]);
 
