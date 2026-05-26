@@ -13,9 +13,7 @@ use App\Http\Controllers\API\ProfileController;
 // RUTE PUBLIK (Tidak butuh Token)
 // ===========================================
 Route::post('/mobile/login', [AuthController::class, 'login']);
-
 Route::post('/chatbot', [ChatbotController::class, 'chat']);
-
 
 
 // ===========================================
@@ -23,26 +21,22 @@ Route::post('/chatbot', [ChatbotController::class, 'chat']);
 // ===========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    
-
     Route::post('/mobile/verifikasi-obat', [JadwalObatController::class, 'verifikasiObat']);
-
     Route::get('/mobile/riwayat', [JadwalObatController::class, 'riwayatMobile']);
-
     Route::get('/mobile/rekam-medis/{antrian_id}', [BookingController::class, 'detailRekamMedis']);
-
-    //Get dokter
+    
+    // Get dokter
     Route::get('/mobile/doctors', [BookingController::class, 'listDokter']);
-
-    //Dashboard Api
+    
+    // Dashboard Api
     Route::get('/mobile/dashboard', [JadwalObatController::class, 'dashboardMobile']);
-
+    
     // Booking Antrian
     Route::post('/mobile/booking', [BookingController::class, 'store']);
-
+    
     // Logout Mobile (Untuk menghapus token)
     Route::post('/mobile/logout', [AuthController::class, 'logout']);
-
+    
     // Cek Data Profile User saat ini
     Route::get('/mobile/profile', function (Request $request) {
         return response()->json([
@@ -52,12 +46,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/mobile/jadwal-obat', [JadwalObatController::class, 'hariIni']);
-
-    
     Route::post('/mobile/minum-obat/{id_jadwal}', [JadwalObatController::class, 'tandaiSudahMinum']);
 
-    Route::get('/user-profile', [ProfileController::class, 'index']);
+}); // <--- 🛑 BATAS AKHIR GRUP MIDDLEWARE PRIVATE SANCTUM
 
-    
 
-});
+// ===========================================
+// RUTE PUBLIK KHUSUS DEMO (DI LUAR MIDDLEWARE)
+// ===========================================
+// ✅ Ditaruh di sini agar bebas diakses Flutter menggunakan ?user_id=1 tanpa 401 Unauthenticated
+Route::get('/user-profile', [ProfileController::class, 'index']);
