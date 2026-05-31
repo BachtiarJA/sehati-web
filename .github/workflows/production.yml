@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  # DIPAKSA LOWERCASE: Langsung hardcode nama repo dengan huruf kecil agar GHCR tidak error
   IMAGE_NAME: bachtiarja/sehati-web
 
 jobs:
@@ -21,19 +20,44 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # Setup Node.js untuk kompilasi Frontend di dalam Cloud Runner
+      # ==========================================
+      # 1. FASE TESTING (BARU DITAMBAHKAN)
+      # ==========================================
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2' # Disamakan dengan versi PHP di Dockerfile kamu
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Prepare Laravel Environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Automated Tests (PHPUnit)
+        run: php artisan test
+      # ==========================================
+
+      # ==========================================
+      # 2. FASE BUILD FRONTEND
+      # ==========================================
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      # Jalankan kompilasi aset Vite murni di server GitHub
       - name: Compile Frontend Assets (Vite)
         run: |
           npm install
           npm run build
+      # ==========================================
 
+      # ==========================================
+      # 3. FASE PACKAGING (DOCKER)
+      # ==========================================
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -76,8 +100,8 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             docker compose pull
             docker compose up -d --remove-orphans
-            
-            # Otomatisasi pembersihan internal state Laravel pasca deploy luar
+
+            # Otomatisasi pembersihan internal state Laravel pasca deploy
             docker exec web_backend_laravel php artisan migrate --force
             docker exec web_backend_laravel php artisan view:clear
             docker exec web_backend_laravel php artisan config:clear

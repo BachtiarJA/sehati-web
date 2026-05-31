@@ -62,12 +62,14 @@ function Home() {
                                     <span className="absolute -bottom-1.5 left-0 h-0.5 w-0 rounded-full bg-[#04989F] transition-all group-hover:w-full"></span>
                                 </Link>
                             </div>
-                            {/* <div className="hidden md:flex items-center gap-4 animate-slide-up">
-                <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-[#04989F] transition-colors">Masuk</Link>
-                <Link href="/register" className="bg-[#04989F] hover:bg-[#037d83] text-white px-7 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 inline-block">
+                            <div className="animate-slide-up hidden items-center gap-4 md:flex">
+                                <Link href="/login" className="text-sm font-semibold text-slate-600 transition-colors hover:text-[#04989F]">
+                                    Masuk
+                                </Link>
+                                {/* <Link href="/register" className="bg-[#04989F] hover:bg-[#037d83] text-white px-7 py-2.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 inline-block">
                   Daftar
-                </Link>
-              </div> */}
+                </Link> */}
+                            </div>
                         </div>
                     </div>
                 </nav>
