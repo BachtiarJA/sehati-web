@@ -21,7 +21,7 @@ services:
     container_name: db_kelompok30
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=gRfT62$77
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       - MYSQL_DATABASE=sehati_db
     volumes:
       - db_data:/var/lib/mysql
